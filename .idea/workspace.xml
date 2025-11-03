@@ -5,10 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b9434dcd-9c27-4d95-8187-e7cab01ea120" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Autoencoders.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data_preprocessing.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Data_preprocessing.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dimentionality_Reduction.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Dimentionality_Reduction.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/VAE.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/VAE.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flame_analysis_model/ML_models/VAE.py" beforeDir="false" afterPath="$PROJECT_DIR$/flame_analysis_model/ML_models/VAE.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/flame_analysis_model/ML_models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/flame_analysis_model/ML_models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/flame_analysis_model/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flame_front_po_post0.csv" beforeDir="false" afterPath="$PROJECT_DIR$/flame_front_po_post0.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,8 +23,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Jupyter Notebook" />
         <option value="Python Script" />
+        <option value="Jupyter Notebook" />
       </list>
     </option>
   </component>
@@ -48,6 +53,9 @@
   }
 }</component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\alexp\Documents\Bachelor Thesis\Code" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\alexp\Documents\Bachelor Thesis\Code" />
     </key>

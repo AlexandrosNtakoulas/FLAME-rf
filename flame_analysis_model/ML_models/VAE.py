@@ -8,27 +8,40 @@ class VAE(nn.Module):
 
         # Encoder
         self.in_2hid = nn.Linear(num_input, num_hidden)
-        self.hid_2mu  = nn.Linear(num_hidden, num_latent)
-        self.hid_2sig = nn.Linear(num_hidden, num_latent)
+        self.hid_2mu = nn.Linear(num_hidden, num_latent)
+        self.hid_2logvar = nn.Linear(num_hidden, num_latent)  # changed name
+
         # Decoder
         self.z_2hid = nn.Linear(num_latent, num_hidden)
         self.hid_2in = nn.Linear(num_hidden, num_input)
+
+        # Between
+        self.between = nn.Linear(num_hidden, num_hidden)
 
         self.relu = nn.ReLU()
 
     def encode(self, x):
         h = self.relu(self.in_2hid(x))
-        mu, sigma = self.hid_2mu(h), self.hid_2sig(h)
-        return mu, sigma
+        k = self.relu(self.between(h))
+        mu = self.hid_2mu(k)
+        logvar = self.hid_2logvar(k)
+        return mu, logvar
 
     def decode(self, z):
         h = self.relu(self.z_2hid(z))
-        return torch.sigmoid(self.hid_2in(h))
-    def forward(self, x):
+        k = self.relu(self.between(h))
+        return self.hid_2in(k)  # maps to (0,1), fine for normalized inputs
 
-        mu, sigma = self.encode(x)
-        epsilon = torch.randn_like(sigma)
-        z_parametarized = mu + sigma * epsilon
-        x_reconstructed = self.decode(z_parametarized)
-        return z_parametarized, x_reconstructed, mu, sigma
+    def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor):
+        """Reparameterization trick: z = mu + sigma * epsilon"""
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+
+    def forward(self, x: torch.Tensor):
+        mu, logvar = self.encode(x)
+        z = self.reparameterize(mu, logvar)
+        x_recon = self.decode(z)
+        return x_recon, mu, logvar, z
+
 

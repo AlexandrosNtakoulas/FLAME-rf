@@ -3,6 +3,7 @@ from .autoencoder import AutoEncoder, Encoder, Decoder
 from .GLV_autoencoder import MLP,SNMLP,LinearCombo,SNLinearCombo,_Combo
 from .VAE import VAE
 
+
 __all__ = [
     "MachineLearningModel",
     "AutoEncoder",
