@@ -1,5 +1,5 @@
 
-### MACHINE-LEARNING AND MODEL REDUCTIONFRAMEWORK DEVELOPMENT FOR DNS DATA
+### MACHINE-LEARNING AND MODEL REDUCTION FRAMEWORK DEVELOPMENT FOR DNS DATA
 Python-based open source frameworks
 offer powerful platforms to assist the
 construction of reduced order models
@@ -29,6 +29,8 @@ The goal of this work is to establish a reproducible computational pipeline that
 1. Extracts local flame characteristics (e.g., curvature, strain, species concentrations) from high-fidelity DNS data.
 2. Performs **feature scaling, dimensionality reduction, and symbolic regression** to uncover physical relations governing the **flame displacement speed**.
 3. Bridges **physics-based modeling** with **data-driven discovery** through interpretable and efficient machine-learning models.
+
+Click here to read the report: [Report](https://www.overleaf.com/read/zjbhgsnxntdk#ec7097)
 
 ---
 
@@ -60,16 +62,18 @@ Code/
 - pyvtk, pyvista, mayavi
 - grep hrr mpi-out.48228984| awk ' NR>1 { print $6, $5}' > iHRR_01
 ## Questions:
-- Might not need Xwindows cause I have WSLg but gnuplot doesnt have the correct terminal
 - Clustering first or after dimensionality reduction?
 - Does it make sense to UQ?(With Bayesian inference) Or deterministic is better?
+----
+- Whats the difficulty with calculating FDS during the DNS spectral solver? What are we gaining in terms of prediction accuracy here?
+- Would an inverse problem be interesting: From FDS predict flow field? What kind of flame (regime) would predict this flame parameter etc.?
+- How is the FDS computed in the code?
+- Whats the difficulty in deriving the analytical models?
 ---
 ## New to dos:
-- setup adaptive velocity
 - comparative study on dimensionality reduction methods
-- Setup parallel visit
 - Intepretability metrics
-- SHoould I do 1 simulation at a time or multiple
+- Should I do 1 simulation at a time or multiple
 - Interpretable Discriminative Dimensionality Reduction and Feature Selection on the Manifold
 - LXDR (Local eXplanation of Dimensionality Reduction)
 - Res-VAE used in biology
@@ -95,7 +99,9 @@ The VAE gives you a smooth generative latent space; the SNE term sculpts that sp
 - Supervised Clustering for Optimal Sub‑model Selection
 - Different flame front regions, figure out most important features in each region(PCA)
 - After clustering look at how a horyontal line through the flame transltes in the latent space
+- Cluster different flame regimes so that you can say, Ah I am in this regime I will use this formula
 ## To infer variables: 
+- Model difference between existing models and the actual values so that you just get a correction term
 - Sd -> Main focus, G equation
 - Flame surface density
 - Reaction rates

@@ -5,29 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b9434dcd-9c27-4d95-8187-e7cab01ea120" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Clustering_comparison.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DR_comparison.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaussian Process.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Autoencoders.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Autoencoders.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data_preprocessing.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Data_preprocessing.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dimentionality_Reduction.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Clustering_comparison.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Clustering_comparison.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DMD.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/DMD.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DR_comparison.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/DR_comparison.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Extract_flame_front.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Extract_flame_front.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/K-means &amp; JSK means.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/K-means &amp; JSK means.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/New_diffusion_maps.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/New_diffusion_maps.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Identifying_flame_front.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/K-means &amp; JSK means.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/New_diffusion_maps.ipynb" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Symbolic_Regression.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Symbolic_Regression.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VAE.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/VAE.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Visualization_test.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Visualization_test.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/v2/po_premix0.f00001" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/v2/premix0.f00001" beforeDir="false" afterPath="$PROJECT_DIR$/data/v2/premix0.f00001" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/flame_analysis_model/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/extracted_flame_front_10.csv" beforeDir="false" afterPath="$PROJECT_DIR$/extracted_flame_front_10.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/flame_analysis_model/datasets.py" beforeDir="false" afterPath="$PROJECT_DIR$/flame_analysis_model/datasets.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_front_po_post0.csv" beforeDir="false" afterPath="$PROJECT_DIR$/flame_front_po_post0.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/test.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test_gradient.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_gradient.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

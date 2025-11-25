@@ -16,6 +16,7 @@ import cantera as ct
 from pySEMTools.pysemtools.datatypes import FieldRegistry
 from .utils import _unwrap_scalar
 
+import pyvista as pv
 
 # ----------------------------------------------------
 # SEMDataset: load + access Nek data
@@ -47,9 +48,10 @@ class SEMDataset:
     """
     def __init__(
             self,
-            fname: str,
+            folder_name: str,
+            file_name: str,
+            time_step: int,
             comm: Optional[MPI.Comm] = None,
-            gname: Optional[str] = None,
             scalar_names: List[str] = None
     ) -> None:
         self.comm = comm
@@ -57,6 +59,13 @@ class SEMDataset:
         self.fld = FieldRegistry(comm)
         self.scalar_names = scalar_names
         self.dataframe = None
+        self.file_name = file_name
+        self.folder_name = folder_name
+        self.time_step = time_step
+
+
+        gname = f"./{self.folder_name}/{self.file_name}0.f00001"
+        fname = f"./{self.folder_name}/{self.file_name}0.f{self.time_step:05d}"
         # read coordinates/mesh from gname (geometry file)
         pynekread(gname, comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
         # read actual field data from fname (time snapshot)
@@ -191,43 +200,103 @@ class SEMDataset:
         max_hrr = np.max(heat_release_field)
         return heat_release_field > (threshold_factor * max_hrr)
 
-    def extract_flame_front_dataframe(
+    def extract_flame_front_new(
             self,
-            sample_mode: str = "progress",
+            sample_mode: str = "isocontour",
             c_level: float = None,
             tol: float = None,
             hrr_factor: float = None
     ) -> pd.DataFrame:
         """
-        Returns a dataframe of only the flame front. The flame front
-        is extracted by either using a progress variable
+        Extract an isocontour of the temperature field on the Nek/pySEMTools mesh
+        and return all variables on that isocontour as a DataFrame.
+        """
 
-        Parameters
-        ----------
-        sample_mode : str
-            Whether to sample the flame front with a progress variable e.g. Temperature or
-            via the maximum heat release rate as proposed by Lucas TODO reference
-        c_level: float
-            The level of the progress variable at which to sample the flame front
-        tol: float
-            The tolerance around c_level, which to except for the sampled datapoints
-        hrr_factor: float
-            The min percentage of the maximum heat release rate to accept
-        Returns
-        -------
-        front: pd.Dataframe
+        assert self.dataframe is not None, "Dataframe has not been created yet"
+        assert sample_mode == "isocontour", "Only 'isocontour' implemented here"
+        assert c_level is not None, "For 'isocontour', c_level must be the temperature isovalue"
+
+        grid = pv.StructuredGrid(self.x.reshape(-1), self.y.reshape(-1), self.z.reshape(-1))
+        grid.point_data["temp"] = np.asarray(self.fld.fields["temp"]).ravel()
+        for i in range(len(self.scalar_names)):
+            grid.point_data[self.scalar_names[i]] = np.asarray(self.scalars[i]).ravel()
+
+        # 3) Extract isocontour of the temperature field
+        #    Adjust 'temp' if your temperature field has a different name.
+        iso = grid.contour(scalars="temp", isosurfaces=[c_level])
+
+        # 4) Build a DataFrame with coordinates + all variables on the contour
+        pts = iso.points  # shape (N, 3)
+        data = {
+            "x": pts[:, 0],
+            "y": pts[:, 1],
+            "z": pts[:, 2],
+        }
+
+        # Add all point-data arrays present on the contour (temp, vel, scalars,…)
+        for name, arr in iso.point_data.items():
+            data[name] = np.asarray(arr)
+
+        front = pd.DataFrame(data)
+        return front
+
+    def extract_flame_front_dataframe(
+            self,
+            sample_mode: str = "isocontour",
+            c_level: float = None,
+            tol: float = None,
+            hrr_factor: float = None
+    ) -> pd.DataFrame:
+        """
+        Returns a dataframe of only the flame front.
+
+        sample_mode:
+            "isocontour" : use PyVista contour on T at T = c_level
+            "progress"   : use band in progress variable
+            "hrr"        : use heat-release threshold
         """
         assert (self.dataframe is not None), "Dataframe has not been created yet"
-        if sample_mode == "progress":
 
+        if sample_mode == "isocontour":
+            assert c_level is not None, \
+                "For sample_mode='isocontour', c_level must be the temperature isovalue"
+
+            # Read the Nek5000 file via PyVista
+            reader = pv.get_reader(f"./{self.folder_name}/{self.file_name}.nek5000")
+            reader.set_active_time_value(self.time_step)
+            ds = reader.read()  # this is a PyVista dataset (likely StructuredGrid)
+
+            # Extract the isocontour Temperature = c_level
+            iso = ds.contour(isosurfaces=[c_level], scalars="Temperature")
+
+            pts = iso.points
+            df_dict = {
+                "x": pts[:, 0],
+                "y": pts[:, 1],
+            }
+
+            # Add all point-data variables present on the contour
+            # (Temperature, velocity components, species, etc.)
+            for name, arr in iso.point_data.items():
+                df_dict[name] = np.asarray(arr)
+
+            front = pd.DataFrame(df_dict)
+            return front
+
+        # --- existing modes preserved ---
+        if sample_mode == "progress":
             c = self.progress_variable_T(self.t)
             mask = self.band_mask(c, c_level, tol).ravel()
+            return self.dataframe[mask]
+
         elif sample_mode == "hrr":
-            mask = self.heat_release_mask(threshold_factor= hrr_factor).ravel()
+            raise NotImplementedError(
+                "sample_mode='hrr' not wired to a stored heat_release_field yet."
+            )
+
         else:
-            assert True, "Invalid sampling mode"
-        front = self.dataframe[mask]
-        return front
+            raise ValueError("Invalid sampling mode: 'isocontour', 'progress', or 'hrr'")
+
 
 
 
