@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b9434dcd-9c27-4d95-8187-e7cab01ea120" name="Changes" comment="" />
+    <list default="true" id="b9434dcd-9c27-4d95-8187-e7cab01ea120" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/FDS_Inference.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Clustering_comparison.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Clustering_comparison.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DR_comparison.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/DR_comparison.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data_preprocessing.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Data_preprocessing.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Extract_flame_front.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Extract_flame_front.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Visualization_test.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Visualization_test.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flame_analysis_model/datasets.py" beforeDir="false" afterPath="$PROJECT_DIR$/flame_analysis_model/datasets.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

@@ -200,7 +200,7 @@ class SEMDataset:
         max_hrr = np.max(heat_release_field)
         return heat_release_field > (threshold_factor * max_hrr)
 
-    def extract_flame_front_new(
+    def extract_flame_front_pyvista(
             self,
             sample_mode: str = "isocontour",
             c_level: float = None,
@@ -217,13 +217,13 @@ class SEMDataset:
         assert c_level is not None, "For 'isocontour', c_level must be the temperature isovalue"
 
         grid = pv.StructuredGrid(self.x.reshape(-1), self.y.reshape(-1), self.z.reshape(-1))
-        grid.point_data["temp"] = np.asarray(self.fld.fields["temp"]).ravel()
+        grid.point_data["T"] = np.asarray(self.fld.fields["temp"]).ravel()
         for i in range(len(self.scalar_names)):
             grid.point_data[self.scalar_names[i]] = np.asarray(self.scalars[i]).ravel()
 
         # 3) Extract isocontour of the temperature field
         #    Adjust 'temp' if your temperature field has a different name.
-        iso = grid.contour(scalars="temp", isosurfaces=[c_level])
+        iso = grid.contour(scalars="T", isosurfaces=[c_level])
 
         # 4) Build a DataFrame with coordinates + all variables on the contour
         pts = iso.points  # shape (N, 3)
@@ -235,12 +235,48 @@ class SEMDataset:
 
         # Add all point-data arrays present on the contour (temp, vel, scalars,…)
         for name, arr in iso.point_data.items():
+            if name == "temp":
+                continue
+            data[name] = np.asarray(arr)
+
+        front = pd.DataFrame(data)
+        return front
+    def extract_flame_front_unstruct(
+            self,
+            sample_mode: str = "isocontour",
+            c_level: float = None,
+            tol: float = None,
+            hrr_factor: float = None
+    ) -> pd.DataFrame:
+        grid = pv.StructuredGrid(self.x.reshape(-1), self.y.reshape(-1), self.z.reshape(-1))
+        grid.point_data["T"] = np.asarray(self.fld.fields["temp"]).ravel()
+
+        for i in range(len(self.scalar_names)):
+            grid.point_data[self.scalar_names[i]] = np.asarray(self.scalars[i]).ravel()
+
+        # 3) Extract isocontour of the temperature field
+        #    Adjust 'temp' if your temperature field has a different name.
+        iso = grid.contour(scalars="T", isosurfaces=[c_level])
+
+        # 4) Build a DataFrame with coordinates + all variables on the contour
+        pts = iso.points  # shape (N, 3)
+        data = {
+            "x": pts[:, 0],
+            "y": pts[:, 1],
+            "z": pts[:, 2],
+        }
+
+        # Add all point-data arrays present on the contour (temp, vel, scalars,…)
+        for name, arr in iso.point_data.items():
+            if name == "temp":
+                continue
             data[name] = np.asarray(arr)
 
         front = pd.DataFrame(data)
         return front
 
-    def extract_flame_front_dataframe(
+
+    def extract_flame_front_old(
             self,
             sample_mode: str = "isocontour",
             c_level: float = None,
@@ -256,33 +292,6 @@ class SEMDataset:
             "hrr"        : use heat-release threshold
         """
         assert (self.dataframe is not None), "Dataframe has not been created yet"
-
-        if sample_mode == "isocontour":
-            assert c_level is not None, \
-                "For sample_mode='isocontour', c_level must be the temperature isovalue"
-
-            # Read the Nek5000 file via PyVista
-            reader = pv.get_reader(f"./{self.folder_name}/{self.file_name}.nek5000")
-            reader.set_active_time_value(self.time_step)
-            ds = reader.read()  # this is a PyVista dataset (likely StructuredGrid)
-
-            # Extract the isocontour Temperature = c_level
-            iso = ds.contour(isosurfaces=[c_level], scalars="Temperature")
-
-            pts = iso.points
-            df_dict = {
-                "x": pts[:, 0],
-                "y": pts[:, 1],
-            }
-
-            # Add all point-data variables present on the contour
-            # (Temperature, velocity components, species, etc.)
-            for name, arr in iso.point_data.items():
-                df_dict[name] = np.asarray(arr)
-
-            front = pd.DataFrame(df_dict)
-            return front
-
         # --- existing modes preserved ---
         if sample_mode == "progress":
             c = self.progress_variable_T(self.t)
