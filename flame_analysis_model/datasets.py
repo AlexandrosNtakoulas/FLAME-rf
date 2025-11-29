@@ -194,71 +194,132 @@ class SEMDataset:
     def heat_release_mask(
             self,
             threshold_factor: float = 0.15,
-            heat_release_field=None
+            heat_release_field= None
     ):
         """Return mask where heat release > threshold_factor * max_heat_release"""
         max_hrr = np.max(heat_release_field)
         return heat_release_field > (threshold_factor * max_hrr)
 
-    def extract_flame_front_pyvista(
-            self,
-            sample_mode: str = "isocontour",
-            c_level: float = None,
-            tol: float = None,
-            hrr_factor: float = None
-    ) -> pd.DataFrame:
-        """
-        Extract an isocontour of the temperature field on the Nek/pySEMTools mesh
-        and return all variables on that isocontour as a DataFrame.
-        """
-
-        assert self.dataframe is not None, "Dataframe has not been created yet"
-        assert sample_mode == "isocontour", "Only 'isocontour' implemented here"
-        assert c_level is not None, "For 'isocontour', c_level must be the temperature isovalue"
-
-        grid = pv.StructuredGrid(self.x.reshape(-1), self.y.reshape(-1), self.z.reshape(-1))
-        grid.point_data["T"] = np.asarray(self.fld.fields["temp"]).ravel()
-        for i in range(len(self.scalar_names)):
-            grid.point_data[self.scalar_names[i]] = np.asarray(self.scalars[i]).ravel()
-
-        # 3) Extract isocontour of the temperature field
-        #    Adjust 'temp' if your temperature field has a different name.
-        iso = grid.contour(scalars="T", isosurfaces=[c_level])
-
-        # 4) Build a DataFrame with coordinates + all variables on the contour
-        pts = iso.points  # shape (N, 3)
-        data = {
-            "x": pts[:, 0],
-            "y": pts[:, 1],
-            "z": pts[:, 2],
-        }
-
-        # Add all point-data arrays present on the contour (temp, vel, scalars,…)
-        for name, arr in iso.point_data.items():
-            if name == "temp":
-                continue
-            data[name] = np.asarray(arr)
-
-        front = pd.DataFrame(data)
-        return front
     def extract_flame_front_unstruct(
             self,
-            sample_mode: str = "isocontour",
             c_level: float = None,
-            tol: float = None,
-            hrr_factor: float = None
     ) -> pd.DataFrame:
-        grid = pv.StructuredGrid(self.x.reshape(-1), self.y.reshape(-1), self.z.reshape(-1))
-        grid.point_data["T"] = np.asarray(self.fld.fields["temp"]).ravel()
+        """
+        2D version: build a VTK unstructured QUAD grid from SEM coordinates
+        and extract a temperature isocontour at T = c_level.
 
-        for i in range(len(self.scalar_names)):
-            grid.point_data[self.scalar_names[i]] = np.asarray(self.scalars[i]).ravel()
+        Assumes 2D data (one layer in z); z may be constant.
+        """
 
-        # 3) Extract isocontour of the temperature field
-        #    Adjust 'temp' if your temperature field has a different name.
+        # ------------------------------------------------------------------
+        # 1) Normalize coordinates to shape (nelv, ny, nx)
+        # ------------------------------------------------------------------
+        x = np.asarray(self.x)
+        y = np.asarray(self.y)
+        z = np.asarray(self.z)
+
+        # Expect (nelv, nz, ny, nx) with nz = 1 for 2D
+        nelv, nz, ny, nx = x.shape
+        x = x[:, 0, :, :]
+        y = y[:, 0, :, :]
+        z = z[:, 0, :, :]
+
+
+        # ------------------------------------------------------------------
+        # 2) Build point array: shape (N_points, 3)
+        #    Flatten with loop order (e, j, i) using ravel(order="C")
+        # ------------------------------------------------------------------
+        points = np.column_stack([
+            x.ravel(order="C"),
+            y.ravel(order="C"),
+            z.ravel(order="C"),
+        ])  # (N_points, 3)
+        n_points = points.shape[0]
+        def idx(e: int, j: int, i: int) -> int:
+            """Global point index for (e, j, i) matching ravel(order='C')."""
+            return ((e * ny + j) * nx + i)
+
+        # ------------------------------------------------------------------
+        # 3) Build QUAD cell connectivity
+        # ------------------------------------------------------------------
+        cells = []
+        cell_types = []
+
+        for e in range(nelv):
+            for j in range(ny - 1):
+                for i in range(nx - 1):
+                    n0 = idx(e, j, i)
+                    n1 = idx(e, j, i + 1)
+                    n2 = idx(e, j + 1, i + 1)
+                    n3 = idx(e, j + 1, i)
+
+                    # VTK legacy format: [n_points_in_cell, p0, p1, p2, p3]
+                    cells.extend([4, n0, n1, n2, n3])
+                    cell_types.append(pv.CellType.QUAD)
+
+        cells = np.asarray(cells, dtype=np.int64)
+        cell_types = np.asarray(cell_types, dtype=np.uint8)
+
+        if cells.size == 0:
+            raise RuntimeError("UnstructuredGrid has no cells – check mesh dimensions.")
+
+        # ------------------------------------------------------------------
+        # 4) Create UnstructuredGrid
+        # ------------------------------------------------------------------
+        grid = pv.UnstructuredGrid(cells, cell_types, points)
+
+        # ------------------------------------------------------------------
+        # 5) Attach fields as point data
+        # ------------------------------------------------------------------
+        u = np.asarray(self.u)
+        u = u[:,0,:,:]
+
+        v = np.asarray(self.v)
+        v = v[:,0,:,:]
+
+        T = np.asarray(self.fld.fields["temp"])
+        T = T[0, :, 0, :, :]
+
+        grid.point_data["u"] = u.ravel(order="C")
+        grid.point_data["v"] = v.ravel(order="C")
+        grid.point_data["T"] = T.ravel(order="C")
+
+        for name, values in zip(self.scalar_names, self.scalars):
+            arr = np.asarray(values)
+            arr = arr[:, 0, :, :]
+            grid.point_data[name] = arr.ravel(order="C")
+
+        if self.dataframe is not None:
+            # columns already flattened in the same order as x.reshape(-1)
+            skip_cols = set(["x", "y", "u", "v", "T"])
+            if self.scalar_names is not None:
+                skip_cols.update(self.scalar_names)
+
+            for col in self.dataframe.columns:
+                if col in skip_cols:
+                    continue  # these are already on the grid
+
+                arr_flat = self.dataframe[col].to_numpy()
+                if arr_flat.size != n_points:
+                    continue
+
+                # Attach as point-data scalar (or vector if needed later)
+                grid.point_data[col] = arr_flat
+        # ------------------------------------------------------------------
+        # 6) Extract isocontour of the temperature field
+        # ------------------------------------------------------------------
+        if c_level is None:
+            raise ValueError("c_level must be specified for isocontour extraction")
+
+        Tmin, Tmax = grid.get_data_range("T")
+        if not (Tmin <= c_level <= Tmax):
+            raise ValueError(f"c_level={c_level} is outside T range [{Tmin}, {Tmax}]")
+
         iso = grid.contour(scalars="T", isosurfaces=[c_level])
 
-        # 4) Build a DataFrame with coordinates + all variables on the contour
+        # ------------------------------------------------------------------
+        # 7) Build DataFrame with coordinates + all variables on the contour
+        # ------------------------------------------------------------------
         pts = iso.points  # shape (N, 3)
         data = {
             "x": pts[:, 0],
@@ -266,15 +327,11 @@ class SEMDataset:
             "z": pts[:, 2],
         }
 
-        # Add all point-data arrays present on the contour (temp, vel, scalars,…)
         for name, arr in iso.point_data.items():
-            if name == "temp":
-                continue
             data[name] = np.asarray(arr)
 
         front = pd.DataFrame(data)
         return front
-
 
     def extract_flame_front_old(
             self,

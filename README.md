@@ -62,13 +62,9 @@ Code/
 - pyvtk, pyvista, mayavi
 - grep hrr mpi-out.48228984| awk ' NR>1 { print $6, $5}' > iHRR_01
 ## Questions:
-- Clustering first or after dimensionality reduction?
-- Does it make sense to UQ?(With Bayesian inference) Or deterministic is better?
-----
-- Whats the difficulty with calculating FDS during the DNS spectral solver? What are we gaining in terms of prediction accuracy here?
-- Would an inverse problem be interesting: From FDS predict flow field? What kind of flame (regime) would predict this flame parameter etc.?
-- How is the FDS computed in the code?
-- Whats the difficulty in deriving the analytical models?
+- Isocontour or entire flame?
+- Which state variables to keep?
+- Which mechanism for data?
 ---
 ## New to dos:
 - comparative study on dimensionality reduction methods
