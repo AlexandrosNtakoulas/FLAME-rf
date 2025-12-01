@@ -1,5 +1,7 @@
 .venv/
 outputs/
-data/
+pySEMTools/
+
 *.csv
 *.pdf
+*f[0-9]*

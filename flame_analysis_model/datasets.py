@@ -64,8 +64,8 @@ class SEMDataset:
         self.time_step = time_step
 
 
-        gname = f"./{self.folder_name}/{self.file_name}0.f00001"
-        fname = f"./{self.folder_name}/{self.file_name}0.f{self.time_step:05d}"
+        gname = f"../{self.folder_name}/{self.file_name}0.f00001"
+        fname = f"../{self.folder_name}/{self.file_name}0.f{self.time_step:05d}"
         # read coordinates/mesh from gname (geometry file)
         pynekread(gname, comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
         # read actual field data from fname (time snapshot)
@@ -109,7 +109,20 @@ class SEMDataset:
             compute_reaction_rates: bool = False,
             cantera_inputs: Optional[List[str, float]] = None
     ) -> pd.DataFrame:
-        """Create and return a dataframe with the DNS data"""
+        """
+        Create and return a dataframe with the DNS data
+
+        Parameters
+        ----------
+        compute_vel_jacobian: boolean
+
+        compute_vel_hessian: boolean
+
+        compute_reaction_rates: boolean
+
+        cantera_inputs: list
+            List of cantera file, species list, equivalence ratio, T_ref, p_ref
+        """
         # Add basic fields
         data = {
             "x": self.x.reshape(-1),
@@ -120,13 +133,14 @@ class SEMDataset:
         }
 
         # Add scalar values
-        for i in range(len(self.scalar_names)):
+        for i in range(len(self.scalars)):
             data.update(
                 {
                     self.scalar_names[i]: np.array(self.scalars[i]).reshape(-1)
                 }
             )
         self.dataframe = pd.DataFrame(data)
+
         if compute_vel_jacobian:
             self.add_vel_jacobian_to_dataframe()
         if compute_vel_hessian:
