@@ -5,14 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b9434dcd-9c27-4d95-8187-e7cab01ea120" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/notebooks/Archive/archive.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/notebooks/Isocontours_study_PCA_kmeans.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/notebooks/Isocontours_study_SE_.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/notebooks/Isocontours_study_UMAP_HDBSCAN.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flame_analysis_model/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/flame_analysis_model/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/flame_analysis_model/datasets.py" beforeDir="false" afterPath="$PROJECT_DIR$/flame_analysis_model/datasets.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/Autoencoders.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/Autoencoders.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/notebooks/Clustering_comparison.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Clustering_comparison.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/DR_comparison.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/DR_comparison.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/Data_visualization.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Data_visualization.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/notebooks/Extract_flame_front.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Extract_flame_front.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/FDS_Inference.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/FDS_Inference.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/Gaussian Process.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/Gaussian Process.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/Symbolic_Regression.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/Symbolic_Regression.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/VAE.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/VAE.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/gen_models_utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/gen_models_utilities.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,11 +67,11 @@
       <recent name="C:\Users\alexp\Documents\Bachelor Thesis\Code" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\alexp\Documents\Bachelor Thesis\Code\notebooks\Archive" />
       <recent name="C:\Users\alexp\Documents\Bachelor Thesis\Code\notebooks" />
       <recent name="C:\Users\alexp\Documents\Bachelor Thesis\Code" />
       <recent name="C:\Users\alexp\Documents\Bachelor Thesis\Code\chemical_mech" />
       <recent name="C:\Users\alexp\Documents\Bachelor Thesis\Code\isocontours" />
-      <recent name="C:\Users\alexp\Documents\Bachelor Thesis\Code\" />
     </key>
   </component>
   <component name="RunManager">
