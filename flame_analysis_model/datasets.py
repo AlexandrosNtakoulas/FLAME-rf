@@ -14,7 +14,6 @@ from pysemtools.io.ppymech.neksuite import pynekread
 import cantera as ct
 
 from pySEMTools.pysemtools.datatypes import FieldRegistry
-from .utils import _unwrap_scalar
 
 import pyvista as pv
 
@@ -77,15 +76,10 @@ class SEMDataset:
         # Velocity
         vel = self.fld.fields.get("vel", None)
         self.u, self.v = vel[0], vel[1]
-        self.w = vel[2] if len(vel) > 2 else np.zeros_like(self.u)
         # Temperature
         self.t = _unwrap_scalar(self.fld.fields.get("temp", None))
         # Scalars
         self.scalars = self.fld.fields.get("scal", None)
-        assert (len(self.scalar_names) != (3 + len(self.scalars))), \
-            (f"There is a mismatch in the number of variables.  "
-             f"You gave {len(self.scalar_names)} "
-             f"but the dataset has {len(self.scalars)} scalars")
         return
 
     def grad2d(self, f: np.ndarray):
@@ -131,7 +125,6 @@ class SEMDataset:
             "v": self.v.reshape(-1),
             "T": self.t.reshape(-1),
         }
-
         # Add scalar values
         for i in range(len(self.scalars)):
             data.update(
@@ -149,9 +142,8 @@ class SEMDataset:
             self.add_reaction_rates_to_dataframe(
                 cantera_file= cantera_inputs[0],
                 species_list= cantera_inputs[1],
-                eq_ratio= cantera_inputs[2],
-                t_ref= cantera_inputs[3],
-                p_ref= cantera_inputs[4]
+                t_ref= cantera_inputs[2],
+                p_ref= cantera_inputs[3]
             )
         return self.dataframe
 
@@ -171,68 +163,31 @@ class SEMDataset:
             self,
             cantera_file: str = None,
             species_list: List[str] = None,
-            eq_ratio: float = None,
-            t_ref: float = 300,
-            p_ref: int = 1e05
+            t_ref: float = None,
+            p_ref: int = None
     ):
         """Add reaction rates and lewis number of deficient reactant to the dataframe"""
         if species_list is None:
             species_list = ['H2', 'O2', 'H2O', 'H', 'O', 'OH', 'HO2', 'H2O2', 'N2']
-
         y_matrix = np.stack([self.dataframe[name].values for name in species_list], axis=1)
         gas = ct.Solution(cantera_file)
-
         n_points = y_matrix.shape[0]
         n_species = gas.n_species
-
         reaction_rates_molar = np.zeros((n_points, n_species))  # kmol/m3/s
-        reaction_rates_mass = np.zeros((n_points, n_species))  # kg/m3/s
-        HRR = np.zeros(n_points)
+        reaction_rates_mass = np.zeros((n_points, n_species))   # kg/m3/s
         MW = gas.molecular_weights  # kg/kmol, length = n_species
-
         for i in range(n_points):
             gas.TPY = self.dataframe["T"].values[i] * t_ref, p_ref, y_matrix[i, :]
-
             reaction_rates_molar[i, :] = gas.net_production_rates
-
             # convert molar -> mass [kg/m3/s]
             reaction_rates_mass[i, :] = reaction_rates_molar[i, :] * MW
-
-            # heat release [W/m3]
-            HRR[i] = gas.heat_release_rate
-
-
+        F_O_stoich = (0.02851163 / 0.2262686)
+        self.dataframe["phi_loc"] = (self.dataframe["H2"] / self.dataframe["O2"]) / F_O_stoich
         for k, sp in enumerate(gas.species_names):
             self.dataframe[f"omega_{sp}"] = reaction_rates_mass[:, k]
-
-        #self.dataframe["Le_def"] = def_lewis_num
-
-        self.dataframe["HRR"] = HRR
         return
 
-    @staticmethod
-    def band_mask(c: np.ndarray, c_level: float = 0.38, tol: float = 0.01):
-        """Return a band mask with a specified level and tolerance"""
-        return (c > (c_level - tol)) & (c < (c_level + tol))
-
-    @staticmethod
-    def progress_variable_T(t: np.ndarray = None, t_u: float = None, t_b: float = None):
-        """Return the temperature-based progress variable"""
-        t_u = np.percentile(t, q=2)
-        t_b = np.percentile(t, q=98)
-        den = t_b - t_u if t_b > t_u else 1.0
-        return np.clip((t - t_u) / den, a_min=0.0, a_max=1.0)
-
-    def heat_release_mask(
-            self,
-            threshold_factor: float = 0.15,
-            heat_release_field= None
-    ):
-        """Return mask where heat release > threshold_factor * max_heat_release"""
-        max_hrr = np.max(heat_release_field)
-        return heat_release_field > (threshold_factor * max_hrr)
-
-    def extract_flame_front_unstruct(
+    def extract_flame_front(
             self,
             c_level: float = None,
     ) -> pd.DataFrame:
@@ -365,32 +320,5 @@ class SEMDataset:
         front = pd.DataFrame(data)
         return front
 
-    def extract_flame_front_old(
-            self,
-            sample_mode: str = "isocontour",
-            c_level: float = None,
-            tol: float = None,
-            hrr_factor: float = None
-    ) -> pd.DataFrame:
-        """
-        Returns a dataframe of only the flame front.
-
-        sample_mode:
-            "isocontour" : use PyVista contour on T at T = c_level
-            "progress"   : use band in progress variable
-            "hrr"        : use heat-release threshold
-        """
-        assert (self.dataframe is not None), "Dataframe has not been created yet"
-        # --- existing modes preserved ---
-        if sample_mode == "progress":
-            c = self.progress_variable_T(self.t)
-            mask = self.band_mask(c, c_level, tol).ravel()
-            return self.dataframe[mask]
-
-        elif sample_mode == "hrr":
-            raise NotImplementedError(
-                "sample_mode='hrr' not wired to a stored heat_release_field yet."
-            )
-        else:
-            raise ValueError("Invalid sampling mode: 'isocontour', 'progress', or 'hrr'")
-
+def _unwrap_scalar(x):
+    return x[0] if isinstance(x, list) else x
