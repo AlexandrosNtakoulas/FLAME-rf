@@ -5,45 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b9434dcd-9c27-4d95-8187-e7cab01ea120" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/flamekit/io_fronts.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/Clustering + MI.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/Cross_isotherm_prediction.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/Cross_time_step_prediction.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/DR_isotherms.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/Isocontours_study_PCA_kmeans.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/Mutual_Information.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/SHAP_for_each_cluster.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Clustering_Curvature_Only.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Plotting_field_values.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/SHAP_for_each_cluster_onetestcase.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/phi0.40/h400x025_ref/po_postPremix.nek5000" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/phi0.40/h400x050_ref/premix.nek5000" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/phi0.40/h400x100_ref/premix.nek5000" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/phi0.40/h400x200_ref/RUN01/premix.nek5000" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/.idea/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/.idea/flame model.iml" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/.idea/flame model.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/ML_models/GLV_autoencoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/ML_models - old/GLV_autoencoder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/ML_models/VAE.py" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/ML_models - old/VAE.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/ML_models/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/ML_models/autoencoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/ML_models - old/autoencoder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/ML_models/prediction_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/ML_models - old/prediction_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/flame_analysis_model/datasets.py" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/datasets.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Clustering_comparison.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/Clustering_comparison.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Clustering_entire_dataset.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/Clustering_entire_dataset.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/DMD.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/DMD.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/DR_comparison.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/DR_comparison.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Data_visualization.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/Data_visualization.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Extract_isocontours.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Extract_isocontours.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/FDS_Inference.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/FDS_Inference.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Isocontours_study_PCA_kmeans.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Isocontours_study_SE_.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/Isocontours_study_SE_.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Isocontours_study_UMAP_HDBSCAN.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Archive/Isocontours_study_UMAP_HDBSCAN.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Sd_vs_Curvature_vs_Stretch.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Sd_vs_Curvature_vs_Stretch.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/SHAP_for_each_cluster_onetestcase.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/SHAP_for_each_cluster_onetestcase.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

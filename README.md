@@ -27,30 +27,114 @@ The project focuses on **data-driven modeling of hydrogen combustion** using **D
 
 The goal of this work is to establish a reproducible computational pipeline that:
 1. Extracts local flame characteristics (e.g., curvature, strain, species concentrations) from high-fidelity DNS data.
-2. Performs **feature scaling, dimensionality reduction, and symbolic regression** to uncover physical relations governing the **flame displacement speed**.
+2. Performs **feature scaling, dimensionality reduction, and regression** to uncover physical relations governing the **flame displacement speed**.
 3. Bridges **physics-based modeling** with **data-driven discovery** through interpretable and efficient machine-learning models.
-
-Click here to read the report: [Report](https://www.overleaf.com/read/zjbhgsnxntdk#ec7097)
 
 ---
 
 ## 🧩 Project Structure
 
+````text.
+├── data/                         # Nek5000 output data (NOT tracked by git)
+│   ├── phi0.40/
+│   │   ├── h400x025_ref/
+│   │   │   ├── po_postPremix0.f00001
+│   │   │   ├── po_postPremix0.f00100
+│   │   │   └── ...
+│   │   ├── h400x050_ref/
+│   │   ├── h400x100_ref/
+│   │   └── h400x800_ref/
+│   └── phi0.50/
+│       └── ...
+│
+├── isocontours/                  # Extracted flame-front CSVs (NOT tracked by git)
+│   ├── phi0.40/
+│   │   ├── h400x200_ref/
+│   │   │   ├── extracted_flame_front_post_<TIME>_iso_<ISO>.csv
+│   │   │   └── ...
+│   │   └── ...
+│   └── ...
+│
+├── notebooks/                    # Analysis notebooks (clustering, PCA, ML, plots, etc.)
+│   └── ...
+│
+├── flamekit/                     
+│   ├── datasets.py               # SEMDataset wrapper (pysemtools/Nek interfacing)
+│   ├── io_fronts.py              # Case + load_fronts() CSV I/O utilities
+│   └── ML_models - old/          # Legacy models (kept for reference)
+│
+├── pySEMTools/                   # Local pysemtools source/clone (core SEM functionality)
+│   └── ...
+│
+├── test/                         # Tests / experiments
+├── requirements.txt              # Python dependencies
+├── README.md
+└── .gitignore
+````
+## Usage
+
+### 1) Set up the environment
+1. Create and activate a Python environment (recommended).
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+### 2) Place Nek5000 output files in the correct directory (not tracked by git)
 ````text
-Code/
-├── Data_preprocessing.ipynb # Load and preprocess DNS data (H2-air flames)
-├── Dimentionality_Reduction.ipynb # Apply PCA, UMAP, autoencoders for latent analysis
-├── Symbolic_Regression.ipynb # PySR and SINDy for interpretable model discovery
-│
-├── pySEMTools/ # Local library for SEM data handling (I/O + operations)
-│ ├── pysemtools/ # Core module (Mesh, Field, Coef classes)
-│ ├── examples/ # Example usage scripts and test cases
-│ └── tests/ # Unit tests for core components
-│
-├── chem.cti # Cantera mechanism for hydrogen combustion
-├── requirements.txt # Python dependencies
-├── outputs/ # Regression and analysis results (auto-generated)
-│ └── 20251028_203355_tqOaJA/ # Example symbolic regression run
-│
-├── .gitignore # Ignore list for version control
-└── README.md # Repository documentation
+data/
+└── phi0.40/
+    └── h400x025_ref/
+        ├── po_postPremix0.f00001   # REQUIRED: always include the first time step
+        ├── po_postPremix0.f00335   # example time step you want to analyze
+        └── ...
+
+````
+#### Notes:
+- The folder structure encodes the case: phi{PHI}/h400x{LAT_SIZE}_ref
+- The file prefix depends on whether you use post-processing fields:
+  - POST=True, for po_postPremix0.fXXXXX 
+  - POST=False, for premix0.fXXXXX
+- Always include the first time step file (...f00001) in the same folder, even if you analyze a later time step.
+### 3) Extract flame fronts (create CSVs)
+1. Open the flame-front extraction notebook in notebooks/.
+2. Set the key parameters: PHI, LAT_SIZE, TIME_STEP, POST , ISOLEVELS (the list of isotherm / progress-variable levels)
+3. output directory: ISOCONTOUR_BASE_DIR = Path("../isocontours")
+4. Run the notebook.
+
+````text
+isocontours/
+└── phi0.40/
+    └── h400x025_ref/
+        ├── extracted_flame_front_post_<TIME_STEP>_iso_<ISO>.csv
+        └── ...
+
+````
+### 4) Run analysis notebooks (read the CSVs)
+All downstream notebooks should read the extracted CSVs via the unified I/O:
+````bash
+from flamekit.io_fronts import Case, load_fronts
+from pathlib import Path
+
+BASE_DIR   = Path("../isocontours")
+PHI        = 0.40
+LAT_SIZE   = "025"
+TIME_STEP  = 335
+POST       = True
+ISOLEVELS  = [4.5, 4.6, 4.7]
+
+case = Case(
+    base_dir=BASE_DIR,
+    phi=PHI,
+    lat_size=LAT_SIZE,
+    time_step=TIME_STEP,
+    post=POST,
+)
+
+fronts = load_fronts(case, ISOLEVELS)   # dict[iso] -> DataFrame
+df_45  = fronts[4.5]                   # use isotherm 4.5
+
+````
+From here you can proceed with:
+* clustering (KMeans/GMM),
+* PCA per cluster,
+* per-cluster Sd prediction + permutation feature importance,
+* interactive Plotly visualizations, etc.
