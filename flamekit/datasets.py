@@ -100,6 +100,9 @@ class SEMDataset:
             compute_vel_jacobian: bool = False,
             compute_vel_hessian: bool = False,
             compute_reaction_rates: bool = False,
+            compute_T_grad: bool = False,
+            compute_curv_grad: bool = False,
+            compute_local_vel_jacobian: bool = False,
             cantera_inputs: Optional[List[str, float]] = None
     ) -> pd.DataFrame:
         """
@@ -145,6 +148,13 @@ class SEMDataset:
                 t_ref= cantera_inputs[2],
                 p_ref= cantera_inputs[3]
             )
+        if compute_T_grad:
+            self.dataframe["dTdx"], self.dataframe["dTdy"] = self.grad2d(self.t)
+        if compute_curv_grad:
+            self.dataframe["dcurvdx"], self.dataframe["dcurvdy"] = self.grad2d(self.scalars[10])
+        if compute_local_vel_jacobian:
+            self.dataframe["du_ndx"], self.dataframe["du_ndy"] = self.grad2d(self.scalars[14])
+            self.dataframe["du_tdx"], self.dataframe["du_tdy"] = self.grad2d(self.scalars[15])
         return self.dataframe
 
     def add_vel_jacobian_to_dataframe(self):
