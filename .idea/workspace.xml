@@ -5,41 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b9434dcd-9c27-4d95-8187-e7cab01ea120" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/notebooks/AE+ODE.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/Clustering_Curvature_Only.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/Feature_Importance_Lukas.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/Feature_Importance_Lukas_Global_Clustering.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Archive/SHAP_for_each_cluster_onetestcase.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Cluster_curvature+strain.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Comparison.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/DeepKoopman.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Extract_field.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/FDS_decomposition_analysis.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Feature_importance_best.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Feature_importance_no_clustering.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Graph.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Koopman.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Sd_decomp_new.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Sd_decomp_new_new.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Sd_decomp_new_new_new.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/Sd_decomp_new_new_new_new.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/kCNN.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/kFNO.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/kNN.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/new_comparison.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/notebooks/temp.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flamekit/ML_models - old/GLV_autoencoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/GLV_autoencoder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flamekit/ML_models - old/autoencoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/autoencoder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flamekit/datasets.py" beforeDir="false" afterPath="$PROJECT_DIR$/flamekit/datasets.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Archive/Autoencoders.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Autoencoders.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Archive/DMD.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/DMD.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Archive/Data_visualization.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Data_visualization.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Archive/Symbolic_Regression.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Symbolic_Regression.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Clustering_Curvature_Only.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Extract_isocontours.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Extract_isocontours.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/SHAP_for_each_cluster_onetestcase.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/Sd_vs_Curvature_vs_Stretch.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/Sd_vs_Curvature_vs_Stretch.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
