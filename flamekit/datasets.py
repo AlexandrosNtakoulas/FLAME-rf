@@ -13,59 +13,63 @@ import cantera as ct
 from pySEMTools.pysemtools.datatypes import FieldRegistry
 
 import pyvista as pv
+from pathlib import Path
 
-# ----------------------------------------------------
-# SEMDataset: load + access Nek data
-# ----------------------------------------------------
+from pysemtools.io.ppymech.neksuite import pynekread
+# ... keep your other imports
+
+
 class SEMDataset:
-    """
-    Dataset object representing Nek5000 simulation data read via PySEMTools.
-
-    Attributes
-    ----------
-    msh : Mesh
-        Spectral element mesh object (geometry and connectivity).
-    fld : Field
-        Field container with solution variables (vel, temp, scalars, etc.).
-    coef : Coef
-        Derivative operator coefficients for computing gradients.
-    comm :
-        TODO
-
-    x, y, z : np.ndarray
-        Coordinate arrays.
-    u, v, w : np.ndarray
-        Velocity arrays in x,y,z directions respectively
-    t : ndarray
-        Temperature array
-    scalar_names : list
-        Names of scalars
-
-    """
     def __init__(
-            self,
-            folder_name: str,
-            file_name: str,
-            time_step: int,
-            comm: Optional[MPI.Comm] = None,
-            scalar_names: List[str] = None
+        self,
+        folder_name: str,
+        file_name: str,
+        time_step: int,
+        comm: Optional[MPI.Comm] = None,
+        scalar_names: List[str] = None
     ) -> None:
         self.comm = comm
-        self.msh = Mesh(comm, create_connectivity=False, )
+        self.msh = Mesh(comm, create_connectivity=False)
         self.fld = FieldRegistry(comm)
         self.scalar_names = scalar_names
         self.dataframe = None
         self.file_name = file_name
         self.folder_name = folder_name
-        self.time_step = time_step
+        self.time_step = int(time_step)
 
+        project_root = Path(__file__).resolve().parents[1]  # .../Code
+        folder = Path(folder_name).expanduser()
 
-        gname = f"../{self.folder_name}/{self.file_name}0.f00001"
-        fname = f"../{self.folder_name}/{self.file_name}0.f{self.time_step:05d}"
-        # read coordinates/mesh from gname (geometry file)
-        pynekread(gname, comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
-        # read actual field data from fname (time snapshot)
-        pynekread(fname, comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
+        # If folder_name is relative (e.g. "data/phi0.40/..."), resolve relative to project root
+        if not folder.is_absolute():
+            folder = (project_root / folder).resolve()
+        else:
+            folder = folder.resolve()
+
+        if not folder.exists():
+            raise FileNotFoundError(
+                f"Data folder not found:\n  {folder}\n"
+                f"Passed folder_name={folder_name!r}\n"
+                f"project_root={project_root}\n"
+                f"CWD={Path.cwd()}"
+            )
+
+        self.folder = folder
+
+        # Build filenames (adjust here if your naming differs)
+        gname = self.folder / f"{self.file_name}0.f00001"
+        fname = self.folder / f"{self.file_name}0.f{self.time_step:05d}"
+
+        if not gname.exists():
+            raise FileNotFoundError(f"Geometry file not found:\n  {gname}")
+        if not fname.exists():
+            raise FileNotFoundError(f"Field file not found:\n  {fname}")
+
+        # read coordinates/mesh from geometry file
+        pynekread(str(gname), comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
+        # read actual field data from timestep file
+        pynekread(str(fname), comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
+
         # Build derivative operators -> look more into this
         self.coef = Coef(self.msh, comm)
         # Cache coords -> delete?
