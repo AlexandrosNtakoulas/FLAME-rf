@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from mpi4py import MPI
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from pysemtools.datatypes.msh import Mesh
 from pysemtools.datatypes.coef import Coef
 from pysemtools.datatypes.field import Field
@@ -111,7 +111,12 @@ class SEMDataset:
             compute_T_grad: bool = False,
             compute_curv_grad: bool = False,
             compute_local_vel_jacobian: bool = False,
-            cantera_inputs: Optional[List[str, float]] = None
+            cantera_inputs: Optional[List[str, float]] = None,
+            compute_progress_var: bool = False,
+            phi: Optional[float] = None,
+            progress_fuel: str = "H2",
+            progress_oxidizer: str = "O2:0.21, N2:0.79",
+            progress_loglevel: int = 0,
     ) -> pd.DataFrame:
         """
         Create and return a dataframe with the DNS data
@@ -126,6 +131,10 @@ class SEMDataset:
 
         cantera_inputs: list
             List of cantera file, species list, equivalence ratio, T_ref, p_ref
+
+        compute_progress_var: boolean
+            If True, add progress_var = (T - Tcold) / (Thot - Tcold) using a 1D Cantera flame.
+            Requires cantera_inputs and phi.
         """
         # Add basic fields
         data = {
@@ -144,6 +153,24 @@ class SEMDataset:
                 }
             )
         self.dataframe = pd.DataFrame(data)
+
+        if compute_progress_var:
+            if cantera_inputs is None or len(cantera_inputs) < 4:
+                raise ValueError("cantera_inputs must include [cantera_file, _, t_ref, p_ref]")
+            if phi is None:
+                raise ValueError("phi must be provided to compute progress_var")
+            cantera_file = cantera_inputs[0]
+            t_ref = cantera_inputs[2]
+            p_ref = cantera_inputs[3]
+            self.add_progress_variable_to_dataframe(
+                cantera_file=cantera_file,
+                phi=phi,
+                t_ref=t_ref,
+                p_ref=p_ref,
+                fuel=progress_fuel,
+                oxidizer=progress_oxidizer,
+                loglevel=progress_loglevel,
+            )
 
         if compute_vel_jacobian:
             self.add_vel_jacobian_to_dataframe()
@@ -205,13 +232,52 @@ class SEMDataset:
             self.dataframe[f"omega_{sp}"] = reaction_rates_mass[:, k]
         return
 
+    def add_progress_variable_to_dataframe(
+            self,
+            *,
+            cantera_file: str,
+            phi: float,
+            t_ref: float,
+            p_ref: float,
+            fuel: str = "H2",
+            oxidizer: str = "O2:0.21, N2:0.79",
+            loglevel: int = 0,
+    ) -> None:
+        width = _domain_width(self.x, self.y)
+        comm = self.comm
+        rank = comm.rank if comm is not None else 0
+        if rank == 0:
+            t_cold_nd, t_hot_nd = _cantera_temperature_bounds(
+                cantera_file=cantera_file,
+                phi=phi,
+                t_ref=t_ref,
+                p_ref=p_ref,
+                width=width,
+                fuel=fuel,
+                oxidizer=oxidizer,
+                loglevel=loglevel,
+            )
+        else:
+            t_cold_nd, t_hot_nd = None, None
+
+        if comm is not None:
+            t_cold_nd = comm.bcast(t_cold_nd, root=0)
+            t_hot_nd = comm.bcast(t_hot_nd, root=0)
+
+        denom = t_hot_nd - t_cold_nd
+        if abs(denom) < 1e-12:
+            raise ValueError("Invalid temperature bounds for progress_var computation")
+        self.dataframe["progress_var"] = (self.dataframe["T"] - t_cold_nd) / denom
+        return
+
     def extract_flame_front(
             self,
             c_level: float = None,
+            scalar_name: str = "T",
     ) -> pd.DataFrame:
         """
         2D version: build a VTK unstructured QUAD grid from SEM coordinates
-        and extract a temperature isocontour at T = c_level.
+        and extract an isocontour at scalar_name = c_level.
 
         Assumes 2D data (one layer in z); z may be constant.
         """
@@ -315,12 +381,16 @@ class SEMDataset:
         # ------------------------------------------------------------------
         if c_level is None:
             raise ValueError("c_level must be specified for isocontour extraction")
+        if scalar_name not in grid.point_data:
+            raise ValueError(f"scalar_name={scalar_name!r} not found in grid point data")
 
-        Tmin, Tmax = grid.get_data_range("T")
+        Tmin, Tmax = grid.get_data_range(scalar_name)
         if not (Tmin <= c_level <= Tmax):
-            raise ValueError(f"c_level={c_level} is outside T range [{Tmin}, {Tmax}]")
+            raise ValueError(
+                f"c_level={c_level} is outside {scalar_name} range [{Tmin}, {Tmax}]"
+            )
 
-        iso = grid.contour(scalars="T", isosurfaces=[c_level])
+        iso = grid.contour(scalars=scalar_name, isosurfaces=[c_level])
 
         # ------------------------------------------------------------------
         # 7) Build DataFrame with coordinates + all variables on the contour
@@ -342,6 +412,71 @@ def _unwrap_scalar(x):
     return x[0] if isinstance(x, list) else x
 
 
+_PROGRESS_TEMP_CACHE = {}
+
+
+def _domain_width(x: np.ndarray, y: np.ndarray) -> float:
+    x_span = float(np.max(x) - np.min(x))
+    y_span = float(np.max(y) - np.min(y))
+    width = x_span if x_span > 0.0 else y_span
+    if width <= 0.0:
+        width = 1.0
+    return width
+
+
+def _resolve_mechanism_path(cantera_file: str) -> Path:
+    mech_path = Path(cantera_file).expanduser()
+    if not mech_path.is_absolute():
+        project_root = Path(__file__).resolve().parents[1]
+        mech_path = (project_root / mech_path).resolve()
+    if not mech_path.exists():
+        raise FileNotFoundError(f"Cantera mechanism not found: {mech_path}")
+    return mech_path
+
+
+def _cantera_temperature_bounds(
+    *,
+    cantera_file: str,
+    phi: float,
+    t_ref: float,
+    p_ref: float,
+    width: float,
+    fuel: str,
+    oxidizer: str,
+    loglevel: int,
+) -> Tuple[float, float]:
+    mech_path = _resolve_mechanism_path(cantera_file)
+    cache_key = (
+        str(mech_path),
+        float(phi),
+        float(t_ref),
+        float(p_ref),
+        float(width),
+        fuel,
+        oxidizer,
+    )
+    cached = _PROGRESS_TEMP_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    gas = ct.Solution(str(mech_path))
+    gas.TP = t_ref, p_ref
+    gas.set_equivalence_ratio(phi, fuel, oxidizer)
+
+    flame = ct.FreeFlame(gas, width=width)
+    flame.inlet.T = t_ref
+    flame.inlet.X = gas.X
+    flame.set_refine_criteria(curve=0.2, slope=0.1, ratio=2)
+    flame.solve(loglevel=loglevel, auto=True)
+
+    t_cold = float(np.min(flame.T))
+    t_hot = float(np.max(flame.T))
+    t_cold_nd = t_cold / t_ref
+    t_hot_nd = t_hot / t_ref
+    _PROGRESS_TEMP_CACHE[cache_key] = (t_cold_nd, t_hot_nd)
+    return t_cold_nd, t_hot_nd
+
+
 def extract_full_field_csv(
     case: Case,
     data_base_dir: Path,
@@ -356,6 +491,7 @@ def extract_full_field_csv(
     compute_T_grad: bool = False,
     compute_curv_grad: bool = False,
     compute_local_vel_jacobian: bool = False,
+    compute_progress_var: bool = True,
     cantera_inputs: Optional[List[str, float]] = None,
 ) -> Path:
     comm = comm or MPI.COMM_WORLD
@@ -386,6 +522,8 @@ def extract_full_field_csv(
         compute_curv_grad=compute_curv_grad,
         compute_local_vel_jacobian=compute_local_vel_jacobian,
         cantera_inputs=cantera_inputs,
+        compute_progress_var=compute_progress_var,
+        phi=case.phi,
     )
 
     if rank == 0:
