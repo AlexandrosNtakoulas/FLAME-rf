@@ -17,6 +17,10 @@ from pathlib import Path
 
 from pysemtools.io.ppymech.neksuite import pynekread
 # ... keep your other imports
+from dataclasses import replace
+
+from .io_fronts import Case, folder
+from .io_fields import field_path, make_case_with_base_dir
 
 
 class SEMDataset:
@@ -336,3 +340,56 @@ class SEMDataset:
 
 def _unwrap_scalar(x):
     return x[0] if isinstance(x, list) else x
+
+
+def extract_full_field_csv(
+    case: Case,
+    data_base_dir: Path,
+    output_base_dir: Path,
+    *,
+    file_name: str,
+    scalar_names: list[str],
+    comm: Optional[MPI.Comm] = None,
+    compute_vel_jacobian: bool = False,
+    compute_vel_hessian: bool = False,
+    compute_reaction_rates: bool = False,
+    compute_T_grad: bool = False,
+    compute_curv_grad: bool = False,
+    compute_local_vel_jacobian: bool = False,
+    cantera_inputs: Optional[List[str, float]] = None,
+) -> Path:
+    comm = comm or MPI.COMM_WORLD
+    rank = comm.rank
+
+    data_case = make_case_with_base_dir(case, data_base_dir)
+    out_case = make_case_with_base_dir(case, output_base_dir)
+
+    data_folder = folder(data_case)
+    out_path = field_path(out_case)
+
+    if rank == 0:
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    ds = SEMDataset(
+        file_name=file_name,
+        folder_name=str(data_folder),
+        time_step=case.time_step,
+        comm=comm,
+        scalar_names=scalar_names,
+    )
+
+    df = ds.create_dataframe(
+        compute_vel_jacobian=compute_vel_jacobian,
+        compute_vel_hessian=compute_vel_hessian,
+        compute_reaction_rates=compute_reaction_rates,
+        compute_T_grad=compute_T_grad,
+        compute_curv_grad=compute_curv_grad,
+        compute_local_vel_jacobian=compute_local_vel_jacobian,
+        cantera_inputs=cantera_inputs,
+    )
+
+    if rank == 0:
+        df.to_csv(out_path, index=False)
+
+    del df
+    return out_path
