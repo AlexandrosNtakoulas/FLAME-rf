@@ -1,6 +1,8 @@
 .venv/
 outputs/
 pySEMTools/
+report_figures/
 *.csv
 *.pdf
 *f[0-9]*
+.idea/

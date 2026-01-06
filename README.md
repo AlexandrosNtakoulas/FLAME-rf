@@ -34,107 +34,120 @@ The goal of this work is to establish a reproducible computational pipeline that
 
 ## 🧩 Project Structure
 
-````text.
-├── data/                         # Nek5000 output data (NOT tracked by git)
+```text
+.
+├── data/                          # Nek5000 output data (NOT tracked by git)
 │   ├── phi0.40/
 │   │   ├── h400x025_ref/
 │   │   │   ├── po_postPremix0.f00001
 │   │   │   ├── po_postPremix0.f00100
 │   │   │   └── ...
-│   │   ├── h400x050_ref/
-│   │   ├── h400x100_ref/
-│   │   └── h400x800_ref/
-│   └── phi0.50/
-│       └── ...
-│
-├── isocontours/                  # Extracted flame-front CSVs (NOT tracked by git)
-│   ├── phi0.40/
-│   │   ├── h400x200_ref/
-│   │   │   ├── extracted_flame_front_post_<TIME>_iso_<ISO>.csv
-│   │   │   └── ...
 │   │   └── ...
 │   └── ...
 │
-├── notebooks/                    # Analysis notebooks (clustering, PCA, ML, plots, etc.)
+├── isocontours/                   # Extracted flame-front / field CSVs (NOT tracked by git)
 │   └── ...
 │
-├── flamekit/                     
-│   ├── datasets.py               # SEMDataset wrapper (pysemtools/Nek interfacing)
-│   ├── io_fronts.py              # Case + load_fronts() CSV I/O utilities
-│   └── ML_models - old/          # Legacy models (kept for reference)
+├── notebooks/
+│   ├── configs/                   # YAML configs used by notebooks
+│   │   ├── Extract_isocontours.yaml
+│   │   ├── Extract_field.yaml
+│   │   ├── Sd_decomposition_analysis.yaml
+│   │   └── ...
+│   └── *.ipynb                    # Extraction + analysis notebooks
 │
-├── pySEMTools/                   # Local pysemtools source/clone (core SEM functionality)
+├── flamekit/
+│   ├── chemical_mech/
+│   ├── datasets.py
+│   ├── io_fields.py
+│   └── io_fronts.py
+│
+├── pySEMTools/                    # Local pySEMTools clone (core SEM functionality)
 │   └── ...
 │
-├── test/                         # Tests / experiments
-├── requirements.txt              # Python dependencies
+├── report_figures/                # Generated figures (not tracked by git)
+├── requirements.txt
 ├── README.md
 └── .gitignore
-````
+```
+
+## Installation (venv)
+
+```bash
+git clone https://github.com/AlexandrosNtakoulas/Bachelor_Thesis.git
+cd Bachelor_Thesis
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+
+pip3 install ipython jupyter
+pip3 install cantera
+pip3 install pandas matplotlib scikit-learn
+pip3 install seaborn
+pip3 install mpi4py
+pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+pip3 install vtk
+pip3 install pyvista
+pip3 install pyvtk
+pip3 install shap
+pip3 install hdbscan
+pip3 install umap-learn
+pip3 install trame trame-vtk trame-vuetify
+pip3 install pympler
+pip3 install memory_profiler
+pip3 install pydmd
+
+git clone https://github.com/ExtremeFLOW/pySEMTools.git
+cd pySEMTools/
+pip3 install .
+```
+
+Alternative (use the requirements file):
+```bash
+pip3 install -r requirements.txt
+```
+
 ## Usage
 
-### 1) Set up the environment
-1. Create and activate a Python environment (recommended).
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-### 2) Place Nek5000 output files in the correct directory (not tracked by git)
-````text
+### 1) Place Nek5000 output files (not tracked by git)
+```text
 data/
 └── phi0.40/
     └── h400x025_ref/
         ├── po_postPremix0.f00001   # REQUIRED: always include the first time step
         ├── po_postPremix0.f00335   # example time step you want to analyze
         └── ...
+```
 
-````
-#### Notes:
-- The folder structure encodes the case: phi{PHI}/h400x{LAT_SIZE}_ref
-- The file prefix depends on whether you use post-processing fields:
-  - POST=True, for po_postPremix0.fXXXXX 
-  - POST=False, for premix0.fXXXXX
-- Always include the first time step file (...f00001) in the same folder, even if you analyze a later time step.
-### 3) Extract flame fronts (create CSVs)
-1. Open the flame-front extraction notebook in notebooks/.
-2. Set the key parameters: PHI, LAT_SIZE, TIME_STEP, POST , ISOLEVELS (the list of isotherm / progress-variable levels)
-3. output directory: ISOCONTOUR_BASE_DIR = Path("../isocontours")
-4. Run the notebook.
+Notes:
+- Folder structure encodes the case: `phi{PHI}/h400x{LAT_SIZE}_ref`
+- File prefix depends on post-processing:
+  - `POST: true` -> `po_postPremix0.fXXXXX`
+  - `POST: false` -> `premix0.fXXXXX`
+- Always include the first time step file (`...f00001`) in the same folder.
 
-````text
+### 2) Extract flame fronts (CSV)
+1. Edit `notebooks/configs/Extract_isocontours.yaml` with your case settings.
+2. Run `notebooks/Extract_isocontours.ipynb`.
+
+Output example:
+```text
 isocontours/
 └── phi0.40/
     └── h400x025_ref/
         ├── extracted_flame_front_post_<TIME_STEP>_iso_<ISO>.csv
         └── ...
+```
 
-````
-### 4) Run analysis notebooks (read the CSVs)
-All downstream notebooks should read the extracted CSVs via the unified I/O:
-````bash
-from flamekit.io_fronts import Case, load_fronts
-from pathlib import Path
+### 3) Extract fields (CSV)
+1. Edit `notebooks/configs/Extract_field.yaml`.
+2. Run `notebooks/Extract_field.ipynb`.
 
-BASE_DIR   = Path("../isocontours")
-PHI        = 0.40
-LAT_SIZE   = "025"
-TIME_STEP  = 335
-POST       = True
-ISOLEVELS  = [4.5, 4.6, 4.7]
+### 4) Run analysis notebooks
+All analysis notebooks read their parameters from the YAML files in `notebooks/configs/`.
+For example:
+- `notebooks/Sd_decomposition_analysis.ipynb` uses `notebooks/configs/Sd_decomposition_analysis.yaml`
+- `notebooks/Feature_importance_SHAP_curvature_bins.ipynb` uses `notebooks/configs/Feature_importance_SHAP_curvature_bins.yaml`
 
-case = Case(
-    base_dir=BASE_DIR,
-    phi=PHI,
-    lat_size=LAT_SIZE,
-    time_step=TIME_STEP,
-    post=POST,
-)
-
-fronts = load_fronts(case, ISOLEVELS)   # dict[iso] -> DataFrame
-df_45  = fronts[4.5]                   # use isotherm 4.5
-
-````
-From here you can proceed with:
-* clustering (KMeans/GMM),
-* PCA per cluster,
-* per-cluster Sd prediction + permutation feature importance,
-* interactive Plotly visualizations, etc.
+Tip: launch Jupyter from the repo root so relative paths resolve correctly.

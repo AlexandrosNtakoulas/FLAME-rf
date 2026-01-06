@@ -1,0 +1,67 @@
+# Single time step (used if MULTI_TIME_STEP is false)
+TIME_STEP: 335
+
+# Enable multi-time-step extraction
+MULTI_TIME_STEP: true
+# Start time step for multi extraction (inclusive)
+TIME_STEP_START: 270
+# End time step for multi extraction (inclusive)
+TIME_STEP_END: 271
+
+# Case parameters
+PHI: 0.40
+# Lattice size string (e.g., "025", "100")
+LAT_SIZE: "025"
+# Reference temperature
+T_REF: 300
+# Reference pressure
+P_REF: 1.0e05
+
+# Use post-processed data
+POST: true
+
+# Input data base directory (relative to project root)
+DATA_BASE_DIR: "data"
+# Output base directory for extracted fields (relative to project root)
+OUTPUT_BASE_DIR: "isocontours"
+
+# Base file name in the dataset
+FILE_NAME: "po_postPremix"
+
+# Scalars to extract
+SCALARS:
+  - "H2"
+  - "O2"
+  - "H2O"
+  - "H"
+  - "O"
+  - "OH"
+  - "HO2"
+  - "H2O2"
+  - "N2"
+  - "HRR"
+  - "curvature"
+  - "stretch_rate"
+  - "DW_FDS"
+  - "abs_flame_prop_vel_normal"
+  - "flow_velocity_normal"
+  - "flow_velocity_tangential"
+  - "strain_rate"
+  - "tangential_strain_rate"
+  - "normal_strain_rate"
+  - "density_ratio_sigma"
+  - "gradT"
+  - "gradT_normal"
+  - "total_heat_conduction"
+  - "heat_conduction_normal"
+  - "heat_conduction_tangential"
+  - "FDS_source_term"
+  - "FDS_conduction_term"
+  - "FDS_diffusion_term"
+  - "H2_diffusion_total"
+  - "O2_diffusion_total"
+  - "H_diffusion_total"
+  - "vorticity"
+
+# Cantera mechanism YAML (relative to project root)
+CANTERA_YAML: "flamekit/chemical_mech/BurkeH2.yaml"
