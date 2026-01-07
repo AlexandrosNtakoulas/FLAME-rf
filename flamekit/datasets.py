@@ -16,7 +16,6 @@ import pyvista as pv
 from pathlib import Path
 
 from pysemtools.io.ppymech.neksuite import pynekread
-# ... keep your other imports
 from dataclasses import replace
 
 from .io_fronts import Case, folder
@@ -42,39 +41,17 @@ class SEMDataset:
         self.time_step = int(time_step)
 
         project_root = Path(__file__).resolve().parents[1]  # .../Code
-        folder = Path(folder_name).expanduser()
+        self.folder = (project_root / Path(folder_name).expanduser()).resolve()
 
-        # If folder_name is relative (e.g. "data/phi0.40/..."), resolve relative to project root
-        if not folder.is_absolute():
-            folder = (project_root / folder).resolve()
-        else:
-            folder = folder.resolve()
-
-        if not folder.exists():
-            raise FileNotFoundError(
-                f"Data folder not found:\n  {folder}\n"
-                f"Passed folder_name={folder_name!r}\n"
-                f"project_root={project_root}\n"
-                f"CWD={Path.cwd()}"
-            )
-
-        self.folder = folder
-
-        # Build filenames (adjust here if your naming differs)
+        # Build filenames 
         gname = self.folder / f"{self.file_name}0.f00001"
         fname = self.folder / f"{self.file_name}0.f{self.time_step:05d}"
-
-        if not gname.exists():
-            raise FileNotFoundError(f"Geometry file not found:\n  {gname}")
-        if not fname.exists():
-            raise FileNotFoundError(f"Field file not found:\n  {fname}")
 
         # read coordinates/mesh from geometry file
         pynekread(str(gname), comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
         # read actual field data from timestep file
         pynekread(str(fname), comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
-
-        # Build derivative operators -> look more into this
+        # Build derivative operators
         self.coef = Coef(self.msh, comm)
         # Cache coords -> delete?
         self.x, self.y, self.z = self.msh.x, self.msh.y, self.msh.z
@@ -203,7 +180,7 @@ class SEMDataset:
             = self.hess2d(self.u)
         self.dataframe["d2v_xx"], self.dataframe["d2v_xy"], self.dataframe["d2v_yy"] \
             = self.hess2d(self.v)
-
+        
     def add_reaction_rates_to_dataframe(
             self,
             cantera_file: str = None,

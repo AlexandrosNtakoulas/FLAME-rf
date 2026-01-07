@@ -14,18 +14,9 @@ class Case:
     multiple_runs: bool = False
     n_run: int = 0
     h_tag: str = "h400"
-    soret_term: bool = False
-    soret_positive: bool = False
-
-def case_suffix(c: Case) -> str:
-    if c.soret_term and c.soret_positive:
-        return f"{c.h_tag}x{c.lat_size}_ref_Soret_positive"
-    if c.soret_term:
-        return f"{c.h_tag}x{c.lat_size}_ref_Soret"
-    return f"{c.h_tag}x{c.lat_size}_ref"
 
 def folder(c: Case) -> Path:
-    p = c.base_dir / f"phi{c.phi:.2f}" / case_suffix(c)
+    p = c.base_dir / f"phi{c.phi:.2f}" / f"{c.h_tag}x{c.lat_size}_ref"
     if c.multiple_runs:
         p = p / f"RUN0{c.n_run}"
     return p

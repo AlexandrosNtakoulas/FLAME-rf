@@ -19,14 +19,21 @@ P_REF: 1.0e05
 
 # Use post-processed data
 POST: true
-
-# Input data base directory (relative to project root)
+# Input data base directory 
 DATA_BASE_DIR: "data"
-# Output base directory for extracted fields (relative to project root)
+# Output base directory for extracted fields
 OUTPUT_BASE_DIR: "isocontours"
 
 # Base file name in the dataset
 FILE_NAME: "po_postPremix"
+
+# Compute flags
+COMP_VEL_JACOBIAN: true
+COMP_VEL_HESSIAN: false
+COMP_REACTION_RATES: true
+COMP_T_GRAD: true
+COMP_CURV_GRAD: true
+COMP_LOCAL_VEL_JACOBIAN: true
 
 # Scalars to extract
 SCALARS:
