@@ -1,7 +1,7 @@
 # Time step range (inclusive)
 TIME_STEP_START: 200
 # End time step (inclusive)
-TIME_STEP_END: 210
+TIME_STEP_END: 300
 
 # Case parameters
 PHI: 0.40
@@ -30,6 +30,9 @@ X_THESHOLD: 300.0
 # Output directory for plots (relative to project root)
 OUT_DIR: "report_figures/results/DMD/h_025"
 
+# Optional truncated SVD rank for DMD (null = no limit)
+DMD_SVD_RANK: 10
+
 # Physical dt (null uses timestep spacing)
 DT: null
 
@@ -42,6 +45,7 @@ N_MODES_TO_PLOT: 10
 NORMALIZE_MODE_FOR_PLOT: true
 CONTOUR_LEVELS_FILLED: 60
 CONTOUR_LEVELS_LINES: 12
+MODE_CONTOUR_LEVELS_FILLED: 20
 COORD_X: "x"
 COORD_Y: "y"
 

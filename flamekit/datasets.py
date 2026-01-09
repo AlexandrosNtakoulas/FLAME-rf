@@ -111,6 +111,7 @@ class SEMDataset:
 
         compute_progress_var: boolean
             If True, add progress_var = (T - Tcold) / (Thot - Tcold) using a 1D Cantera flame.
+            Also adds laminar flame speed S_L from the same 1D flame.
             Requires cantera_inputs and phi.
         """
         # Add basic fields
@@ -197,16 +198,26 @@ class SEMDataset:
         n_species = gas.n_species
         reaction_rates_molar = np.zeros((n_points, n_species))  # kmol/m3/s
         reaction_rates_mass = np.zeros((n_points, n_species))   # kg/m3/s
+        heat_cond = np.zeros(n_points)  # W/m/K
+        thermal_diff = np.zeros(n_points)  # cm^2/s
         MW = gas.molecular_weights  # kg/kmol, length = n_species
         for i in range(n_points):
             gas.TPY = self.dataframe["T"].values[i] * t_ref, p_ref, y_matrix[i, :]
             reaction_rates_molar[i, :] = gas.net_production_rates
             # convert molar -> mass [kg/m3/s]
             reaction_rates_mass[i, :] = reaction_rates_molar[i, :] * MW
+            heat_cond[i] = gas.thermal_conductivity
+            if gas.density > 0 and gas.cp_mass > 0:
+                alpha_m2_s = heat_cond[i] / (gas.density * gas.cp_mass)
+            else:
+                alpha_m2_s = np.nan
+            thermal_diff[i] = alpha_m2_s * 1.0e4
         F_O_stoich = (0.02851163 / 0.2262686)
         self.dataframe["phi_loc"] = (self.dataframe["H2"] / self.dataframe["O2"]) / F_O_stoich
         for k, sp in enumerate(gas.species_names):
             self.dataframe[f"omega_{sp}"] = reaction_rates_mass[:, k]
+        self.dataframe["heat_conductivity"] = heat_cond
+        self.dataframe["thermal_diffusivity"] = thermal_diff
         return
 
     def add_progress_variable_to_dataframe(
@@ -224,7 +235,7 @@ class SEMDataset:
         comm = self.comm
         rank = comm.rank if comm is not None else 0
         if rank == 0:
-            t_cold_nd, t_hot_nd = _cantera_temperature_bounds(
+            t_cold_nd, t_hot_nd, s_l_cm_s, l_ref_cm = _cantera_temperature_bounds(
                 cantera_file=cantera_file,
                 phi=phi,
                 t_ref=t_ref,
@@ -235,16 +246,20 @@ class SEMDataset:
                 loglevel=loglevel,
             )
         else:
-            t_cold_nd, t_hot_nd = None, None
+            t_cold_nd, t_hot_nd, s_l_cm_s, l_ref_cm = None, None, None, None
 
         if comm is not None:
             t_cold_nd = comm.bcast(t_cold_nd, root=0)
             t_hot_nd = comm.bcast(t_hot_nd, root=0)
+            s_l_cm_s = comm.bcast(s_l_cm_s, root=0)
+            l_ref_cm = comm.bcast(l_ref_cm, root=0)
 
         denom = t_hot_nd - t_cold_nd
         if abs(denom) < 1e-12:
             raise ValueError("Invalid temperature bounds for progress_var computation")
         self.dataframe["progress_var"] = (self.dataframe["T"] - t_cold_nd) / denom
+        self.dataframe["S_L"] = s_l_cm_s
+        self.dataframe["L_ref"] = l_ref_cm
         return
 
     def extract_flame_front(
@@ -421,7 +436,7 @@ def _cantera_temperature_bounds(
     fuel: str,
     oxidizer: str,
     loglevel: int,
-) -> Tuple[float, float]:
+    ) -> Tuple[float, float, float, float]:
     mech_path = _resolve_mechanism_path(cantera_file)
     cache_key = (
         str(mech_path),
@@ -450,8 +465,22 @@ def _cantera_temperature_bounds(
     t_hot = float(np.max(flame.T))
     t_cold_nd = t_cold / t_ref
     t_hot_nd = t_hot / t_ref
-    _PROGRESS_TEMP_CACHE[cache_key] = (t_cold_nd, t_hot_nd)
-    return t_cold_nd, t_hot_nd
+    if hasattr(flame, "velocity"):
+        s_l_m_s = float(flame.velocity[0])
+    else:
+        s_l_m_s = float(flame.u[0])
+
+    grid = np.asarray(flame.grid, dtype=float)
+    dTdx = np.gradient(flame.T, grid)
+    max_grad = float(np.max(np.abs(dTdx)))
+    if max_grad <= 0.0:
+        raise ValueError("Invalid temperature gradient for L_ref computation")
+    l_ref_m = (t_hot - t_cold) / max_grad
+
+    s_l_cm_s = s_l_m_s * 100.0
+    l_ref_cm = l_ref_m * 100.0
+    _PROGRESS_TEMP_CACHE[cache_key] = (t_cold_nd, t_hot_nd, s_l_cm_s, l_ref_cm)
+    return t_cold_nd, t_hot_nd, s_l_cm_s, l_ref_cm
 
 
 def extract_full_field_csv(

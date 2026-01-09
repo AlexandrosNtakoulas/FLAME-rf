@@ -21,6 +21,9 @@ SORT_COLS:
 # Coordinate tolerance for equality checks (0 disables tolerance)
 COORD_TOL: 0.0
 
+# Contour levels for filled plots (match DMD)
+CONTOUR_LEVELS_FILLED: 60
+
 # Keep only points with x > threshold
 X_THRESHOLD: 300.0
 # Backward-compat alias (older notebooks use X_THESHOLD)
@@ -52,7 +55,7 @@ DEC_HIDDEN:
   - 256
 
 # Training epochs
-EPOCHS: 3000
+EPOCHS: 400
 # Batches per epoch
 BATCHES_PER_EPOCH: 50
 # Batch size

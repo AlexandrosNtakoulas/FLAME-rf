@@ -1,12 +1,12 @@
 # Single time step (used if MULTI_TIME_STEP is false)
-TIME_STEP: 335
+TIME_STEP: 301
 
 # Enable multi-time-step extraction
-MULTI_TIME_STEP: true
+MULTI_TIME_STEP: False
 # Start time step for multi extraction (inclusive)
-TIME_STEP_START: 270
+TIME_STEP_START: 200
 # End time step for multi extraction (inclusive)
-TIME_STEP_END: 271
+TIME_STEP_END: 300
 
 # Case parameters
 PHI: 0.40
