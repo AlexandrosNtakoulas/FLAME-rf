@@ -1,0 +1,79 @@
+# Base directory for isocontours (relative to project root)
+BASE_DIR: "data/isocontours"
+# Equivalence ratio
+PHI: 0.40
+# Lattice size string (e.g., "100")
+LAT_SIZE: "100"
+# Use post-processed data
+POST: true
+
+# Time steps to include
+TIME_STEPS:
+  - 198
+  - 199
+  - 200
+  - 201
+
+
+# Isolevel for progress variable
+ISOLEVEL: 0.6
+# Target column name
+TARGET_VAR: "DW_FDS"
+# Target label for plots
+TARGET_LABEL: "Sd"
+# Histogram bin count
+HIST_BINS: 50
+
+# Cluster on spatial coordinates (x,y,z) in addition to features
+CLUSTER_ON_SPATIAL: false
+
+# Feature list for clustering
+CLUSTER_FEATURES_INCLUDE:
+  - "curvature"
+
+# Feature list for model training
+MODEL_FEATURES_INCLUDE:
+  - "curvature"
+  - "dcurvdx"
+  - "dcurvdy"
+  - "vorticity"
+  - "u_n"
+  - "u_t"
+  - "du_ndx"
+  - "du_ndy"
+  - "du_tdx"
+  - "du_tdy"
+  - "dTdx"
+  - "dTdy"
+
+
+# Features to exclude
+FEATURES_EXCLUDE: []
+
+# MI clustering settings (normalize MI to [0,1] before thresholding)
+MI_CLUSTER_THRESHOLD: 0.7
+MI_CLUSTER_NORMALIZE: true
+
+# Column used for curvature bins
+CURVATURE_COLUMN: "curvature"
+# Curvature bounds (low, high)
+CURVATURE_BOUNDS:
+  - -0.1
+  - 0.1
+
+# Number of features per cluster
+K_SELECT_PER_CLUSTER: 12
+# Minimum samples per cluster
+MIN_CLUSTER_SAMPLES: 50
+# RNG seed
+RANDOM_STATE: 0
+
+# Number of MI features to plot
+MI_TOPN_PLOT: 15
+# Top-K representatives to train RF per curvature cluster
+TOPK_REP_PRED: 4
+
+# Output base directory for figures (relative to project root)
+OUTPUT_BASE_DIR: "report_figures/results/mi_cluster_jmi_cmim"
+# Figure DPI
+FIG_DPI: 300

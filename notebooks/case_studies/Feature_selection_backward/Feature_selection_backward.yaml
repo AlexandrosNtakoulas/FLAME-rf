@@ -1,0 +1,83 @@
+# Base directory for isocontours (relative to project root)
+BASE_DIR: "data/isocontours"
+# Equivalence ratio
+PHI: 0.40
+# Lattice size string (e.g., "100")
+LAT_SIZE: "100"
+# Use post-processed data
+POST: true
+
+# Time steps to include
+TIME_STEPS:
+  - 198
+  - 199
+  - 200
+  - 201
+  - 202
+# Isolevel for progress variable
+ISOLEVEL: 0.6
+# Target column name
+TARGET_VAR: "DW_FDS"
+
+# Cluster on spatial coordinates (x,y,z) in addition to features
+CLUSTER_ON_SPATIAL: false
+
+# Feature list for clustering
+CLUSTER_FEATURES_INCLUDE:
+  - "curvature"
+
+# Feature list for model training
+MODEL_FEATURES_INCLUDE:
+  - "curvature"
+  - "dcurvdx"
+  - "dcurvdy"
+  - "tangential_strain_rate"
+  - "normal_strain_rate"
+  - "vorticity"
+  - "u_n"
+  - "u_t"
+  - "du_ndx"
+  - "du_ndy"
+  - "du_tdx"
+  - "du_tdy"
+  - "dTdx"
+  - "dTdy"
+
+# Features to exclude
+FEATURES_EXCLUDE: []
+
+# Column used for curvature bins
+CURVATURE_COLUMN: "curvature"
+# Curvature bounds (low, high)
+CURVATURE_BOUNDS:
+  - -0.1
+  - 0.1
+
+# Minimum samples per cluster
+MIN_CLUSTER_SAMPLES: 50
+# RNG seed
+RANDOM_STATE: 0
+# Test split fraction
+TEST_SIZE: 0.25
+
+# Backward selection settings
+BACKWARD_N_FEATURES_GLOBAL: 4
+BACKWARD_N_FEATURES_CLUSTER: 4
+SFS_SCORING: "r2"
+SFS_CV_SPLITS: 3
+
+# RandomForest parameters
+MODEL_PARAMS:
+  # Number of trees
+  n_estimators: 300
+  # Max tree depth (null for unlimited)
+  max_depth: null
+  # RNG seed
+  random_state: 0
+  # Parallel jobs (-1 uses all cores)
+  n_jobs: -1
+
+# Output base directory for figures (relative to project root)
+OUTPUT_BASE_DIR: "report_figures/results/backward_selection"
+# Figure DPI
+FIG_DPI: 300

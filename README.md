@@ -36,25 +36,34 @@ The goal of this work is to establish a reproducible computational pipeline that
 
 ```text
 .
-├── data/                          # Nek5000 output data (NOT tracked by git)
-│   ├── phi0.40/
-│   │   ├── h400x025_ref/
-│   │   │   ├── po_postPremix0.f00001
-│   │   │   ├── po_postPremix0.f00100
+├── data/                          # Data root (NOT tracked by git)
+│   ├── nek/                       # Nek5000 output files
+│   │   ├── phi0.40/
+│   │   │   ├── h400x025_ref/
+│   │   │   │   ├── po_postPremix0.f00001
+│   │   │   │   ├── po_postPremix0.f00100
+│   │   │   │   └── ...
 │   │   │   └── ...
 │   │   └── ...
-│   └── ...
-│
-├── isocontours/                   # Extracted flame-front / field CSVs (NOT tracked by git)
-│   └── ...
+│   ├── isocontours/               # Extracted flame-front CSVs
+│   │   └── ...
+│   └── fields/                    # Extracted field CSVs
+│       └── ...
 │
 ├── notebooks/
-│   ├── configs/                   # YAML configs used by notebooks
-│   │   ├── Extract_isocontours.yaml
-│   │   ├── Extract_field.yaml
-│   │   ├── Sd_decomposition_analysis.yaml
+│   ├── preprocessing/
+│   │   ├── extract_isocontours/
+│   │   │   ├── extract_isocontours.ipynb
+│   │   │   └── extract_isocontours.yaml
+│   │   └── extract_fields/
+│   │       ├── extract_fields.ipynb
+│   │       └── extract_fields.yaml
+│   ├── case_studies/
+│   │   ├── Model_verification/
+│   │   │   ├── Model_verification.ipynb
+│   │   │   └── Model_verification.yaml
 │   │   └── ...
-│   └── *.ipynb                    # Extraction + analysis notebooks
+│   └── Archive/
 │
 ├── flamekit/
 │   ├── chemical_mech/
@@ -112,7 +121,7 @@ pip3 install -r requirements.txt
 
 ### 1) Place Nek5000 output files (not tracked by git)
 ```text
-data/
+data/nek/
 └── phi0.40/
     └── h400x025_ref/
         ├── po_postPremix0.f00001   # REQUIRED: always include the first time step
@@ -128,12 +137,12 @@ Notes:
 - Always include the first time step file (`...f00001`) in the same folder.
 
 ### 2) Extract flame fronts (CSV)
-1. Edit `notebooks/configs/Extract_isocontours.yaml` with your case settings.
-2. Run `notebooks/Extract_isocontours.ipynb`.
+1. Edit `notebooks/preprocessing/extract_isocontours/extract_isocontours.yaml` with your case settings.
+2. Run `notebooks/preprocessing/extract_isocontours/extract_isocontours.ipynb`.
 
 Output example:
 ```text
-isocontours/
+data/isocontours/
 └── phi0.40/
     └── h400x025_ref/
         ├── extracted_flame_front_post_<TIME_STEP>_iso_<ISO>.csv
@@ -141,13 +150,22 @@ isocontours/
 ```
 
 ### 3) Extract fields (CSV)
-1. Edit `notebooks/configs/Extract_field.yaml`.
-2. Run `notebooks/Extract_field.ipynb`.
+1. Edit `notebooks/preprocessing/extract_fields/extract_fields.yaml`.
+2. Run `notebooks/preprocessing/extract_fields/extract_fields.ipynb`.
+
+Output example:
+```text
+data/fields/
+└── phi0.40/
+    └── h400x025_ref/
+        ├── extracted_field_post_<TIME_STEP>.csv
+        └── ...
+```
 
 ### 4) Run analysis notebooks
-All analysis notebooks read their parameters from the YAML files in `notebooks/configs/`.
+All analysis notebooks read their parameters from the YAML files in their folder under `notebooks/case_studies/`.
 For example:
-- `notebooks/Sd_decomposition_analysis.ipynb` uses `notebooks/configs/Sd_decomposition_analysis.yaml`
-- `notebooks/Feature_importance_SHAP_curvature_bins.ipynb` uses `notebooks/configs/Feature_importance_SHAP_curvature_bins.yaml`
+- `notebooks/case_studies/Sd_decomposition_analysis/Sd_decomposition_analysis.ipynb` uses `notebooks/case_studies/Sd_decomposition_analysis/Sd_decomposition_analysis.yaml`
+- `notebooks/case_studies/Feature_importance_SHAP_curvature_bins/Feature_importance_SHAP_curvature_bins.ipynb` uses `notebooks/case_studies/Feature_importance_SHAP_curvature_bins/Feature_importance_SHAP_curvature_bins.yaml`
 
 Tip: launch Jupyter from the repo root so relative paths resolve correctly.

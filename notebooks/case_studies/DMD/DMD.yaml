@@ -1,0 +1,56 @@
+# Time step range (inclusive)
+TIME_STEP_START: 200
+# End time step (inclusive)
+TIME_STEP_END: 300
+
+# Case parameters
+PHI: 0.40
+# Lattice size string (e.g., "025", "100")
+LAT_SIZE: "025"
+# Use post-processed field files
+POST: true
+
+# Base directory for extracted field CSVs (relative to project root)
+BASE_DIR: "data/fields"
+
+# Field name to run DMD on
+VAR_NAME: "T"
+# Column order used to build the state vector
+SORT_COLS:
+  - "x"
+  - "y"
+# Coordinate tolerance for equality checks (0 disables tolerance)
+COORD_TOL: 0.0
+
+# Keep only points with x > threshold
+X_THRESHOLD: 300.0
+# Backward-compat alias (older notebooks use X_THESHOLD)
+X_THESHOLD: 300.0
+
+# Output directory for plots (relative to project root)
+OUT_DIR: "report_figures/results/DMD/h_025"
+
+# Optional truncated SVD rank for DMD (null = no limit)
+DMD_SVD_RANK: 10
+
+# Physical dt (null uses timestep spacing)
+DT: null
+
+# Eigenvalue/mode tolerances
+MODE_IMAG_TOL: 1.0e-10
+FREQ_TOL: 1.0e-12
+
+# Plot controls
+N_MODES_TO_PLOT: 10
+NORMALIZE_MODE_FOR_PLOT: true
+CONTOUR_LEVELS_FILLED: 60
+CONTOUR_LEVELS_LINES: 12
+MODE_CONTOUR_LEVELS_FILLED: 20
+COORD_X: "x"
+COORD_Y: "y"
+
+# Optional zoom window (null disables)
+XLIM:
+  - 300
+  - 380
+YLIM: null
