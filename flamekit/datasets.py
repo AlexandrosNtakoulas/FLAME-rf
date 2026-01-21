@@ -461,8 +461,9 @@ def _cantera_temperature_bounds(
     flame.set_refine_criteria(curve=0.2, slope=0.1, ratio=2)
     flame.solve(loglevel=loglevel, auto=True)
 
-    t_cold = float(np.min(flame.T))
-    t_hot = float(np.max(flame.T))
+    # Use left/right boundary temperatures instead of extrema.
+    t_cold = float(flame.T[0])
+    t_hot = float(flame.T[-1])
     t_cold_nd = t_cold / t_ref
     t_hot_nd = t_hot / t_ref
     if hasattr(flame, "velocity"):
@@ -533,7 +534,10 @@ def extract_full_field_csv(
     )
 
     if rank == 0:
-        df.to_csv(out_path, index=False)
+        df.to_hdf(out_path, key="field", mode="w", format="table", index=False)
 
     del df
     return out_path
+
+
+extract_full_field_hdf5 = extract_full_field_csv

@@ -1,7 +1,7 @@
 # Base directory for isocontours (relative to project root)
 BASE_DIR: "data/isocontours"
 # Equivalence ratio
-PHI: 0.40
+PHI: 0.4
 # Lattice size string (e.g., "100")
 LAT_SIZE: "100"
 # Use post-processed data
@@ -13,6 +13,7 @@ TIME_STEPS:
   - 199
   - 200
   - 201
+
 
 
 # Isolevel for progress variable
@@ -36,6 +37,8 @@ MODEL_FEATURES_INCLUDE:
   - "curvature"
   - "dcurvdx"
   - "dcurvdy"
+  - "tangential_strain_rate"
+  - "normal_strain_rate"
   - "vorticity"
   - "u_n"
   - "u_t"
@@ -47,12 +50,14 @@ MODEL_FEATURES_INCLUDE:
   - "dTdy"
 
 
+
 # Features to exclude
 FEATURES_EXCLUDE: []
 
 # MI clustering settings (normalize MI to [0,1] before thresholding)
-MI_CLUSTER_THRESHOLD: 0.7
+MI_CLUSTER_THRESHOLD: 1.5
 MI_CLUSTER_NORMALIZE: true
+MI_CLUSTER_LINKAGE: "average"
 
 # Column used for curvature bins
 CURVATURE_COLUMN: "curvature"
@@ -74,6 +79,27 @@ MI_TOPN_PLOT: 15
 TOPK_REP_PRED: 4
 
 # Output base directory for figures (relative to project root)
-OUTPUT_BASE_DIR: "report_figures/results/mi_cluster_jmi_cmim"
+OUTPUT_BASE_DIR: "report_figures/case_studies/Feature_selection_mi_cluster_jmi_cmim"
 # Figure DPI
 FIG_DPI: 300
+
+# Plot styling (optional)
+PLOT_FONT_FAMILY: "CMU Serif"
+PLOT_FONT_SIZE: 20
+FIG_DPI: 250
+FIG_SIZE:
+  - 6.8
+  - 6.2
+COLOR_DATA: "#77b5b6"
+COLOR_DATA_EDGE: "#378d94"
+COLOR_PRED: "#9671bd"
+COLOR_PRED_EDGE: "#6a408d"
+COLOR_NEUTRAL: "#7e7e7e"
+COLOR_LINE: "#8a8a8a"
+PLOT_USE_TEX: True
+
+# Optional:
+PLOT_TEX_PREAMBLE:
+  - "\\usepackage{amsmath}"
+  - "\\usepackage{amssymb}"
+  - "\\usepackage{bm}"

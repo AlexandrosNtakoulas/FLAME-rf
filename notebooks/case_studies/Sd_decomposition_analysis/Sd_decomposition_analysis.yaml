@@ -9,7 +9,6 @@ TIME_STEPS:
 PROGRESS_LEVELS:
   - 0.6
 
-
 # Base directory for isocontours (relative to project root)
 BASE_DIR: "data/isocontours"
 # Use post-processed data
@@ -51,4 +50,25 @@ MIN_SAMPLES: 100
 # Save figures
 SAVE_FIGS: true
 # Output base directory for figures (relative to project root)
-OUT_BASE_DIR: "report_figures/results/FDS_decomposition_analysis"
+OUT_BASE_DIR: "report_figures/case_studies/Sd_decomposition_analysis"
+
+# Plot styling (optional)
+PLOT_FONT_FAMILY: "CMU Serif"
+PLOT_FONT_SIZE: 20
+FIG_DPI: 250
+FIG_SIZE:
+  - 6.8
+  - 6.2
+COLOR_DATA: "#77b5b6"
+COLOR_DATA_EDGE: "#378d94"
+COLOR_PRED: "#9671bd"
+COLOR_PRED_EDGE: "#6a408d"
+COLOR_NEUTRAL: "#7e7e7e"
+COLOR_LINE: "#8a8a8a"
+PLOT_USE_TEX: True
+
+# Optional:
+PLOT_TEX_PREAMBLE:
+  - "\\usepackage{amsmath}"
+  - "\\usepackage{amssymb}"
+  - "\\usepackage{bm}"

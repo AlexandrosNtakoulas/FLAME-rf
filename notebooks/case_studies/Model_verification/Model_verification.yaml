@@ -24,6 +24,10 @@ CURVATURE_COLUMN: "curvature"
 CURVATURE_LOW: -0.1
 CURVATURE_HIGH: 0.1
 
+# Outlier filtering (IQR-based) for positive-curvature fits
+REMOVE_OUTLIERS: True
+OUTLIER_IQR_SCALE: 2
+
 # Negative-curvature model inputs
 
 # User-defined constant C in the model
@@ -33,4 +37,25 @@ C_CONSTANT: 0.5
 # Save split dataframes
 SAVE_SPLITS: true
 # Output base directory for splits (relative to project root)
-OUT_BASE_DIR: "report_figures/results/model_verification"
+OUT_BASE_DIR: "report_figures/case_studies/Model_verification"
+
+# Plot styling (optional)
+PLOT_FONT_FAMILY: "CMU Serif"
+PLOT_FONT_SIZE: 20
+FIG_DPI: 250
+FIG_SIZE:
+  - 6.8
+  - 6.2
+COLOR_DATA: "#77b5b6"
+COLOR_DATA_EDGE: "#378d94"
+COLOR_PRED: "#9671bd"
+COLOR_PRED_EDGE: "#6a408d"
+COLOR_NEUTRAL: "#7e7e7e"
+COLOR_LINE: "#8a8a8a"
+PLOT_USE_TEX: True
+
+# Optional:
+PLOT_TEX_PREAMBLE:
+  - "\\usepackage{amsmath}"
+  - "\\usepackage{amssymb}"
+  - "\\usepackage{bm}"

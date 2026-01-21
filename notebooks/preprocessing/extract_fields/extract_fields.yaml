@@ -1,10 +1,10 @@
 # Single time step (used if MULTI_TIME_STEP is false)
-TIME_STEP: 301
+TIME_STEP: 1
 
 # Enable multi-time-step extraction
-MULTI_TIME_STEP: False
+MULTI_TIME_STEP: True
 # Start time step for multi extraction (inclusive)
-TIME_STEP_START: 200
+TIME_STEP_START: 249
 # End time step for multi extraction (inclusive)
 TIME_STEP_END: 300
 
@@ -18,22 +18,21 @@ T_REF: 300
 P_REF: 1.0e05
 
 # Use post-processed data
-POST: true
-# Input data base directory 
+# When POST is true, input files are named "po_postPremix0.fxxxxx".
+# When POST is false, input files are named "premix0.fxxxxx".
+POST: False
+# Input data base directory
 DATA_BASE_DIR: "data/nek"
 # Output base directory for extracted fields
-OUTPUT_BASE_DIR: "data/fields"
-
-# Base file name in the dataset
-FILE_NAME: "po_postPremix"
+OUTPUT_BASE_DIR: "data/fields/unstructured"
 
 # Compute flags
-COMP_VEL_JACOBIAN: true
-COMP_VEL_HESSIAN: false
-COMP_REACTION_RATES: true
-COMP_T_GRAD: true
-COMP_CURV_GRAD: true
-COMP_LOCAL_VEL_JACOBIAN: true
+COMP_VEL_JACOBIAN:       false
+COMP_VEL_HESSIAN:        false
+COMP_REACTION_RATES:     false
+COMP_T_GRAD:             false
+COMP_CURV_GRAD:          false
+COMP_LOCAL_VEL_JACOBIAN: false
 
 # Scalars to extract
 SCALARS:

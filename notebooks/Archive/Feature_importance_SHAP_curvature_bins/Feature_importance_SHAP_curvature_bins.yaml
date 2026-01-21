@@ -1,0 +1,81 @@
+# Base directory for isocontours (relative to project root)
+BASE_DIR: "data/isocontours"
+# Equivalence ratio
+PHI: 0.40
+# Lattice size string (e.g., "100")
+LAT_SIZE: "100"
+# Use post-processed data
+POST: true
+
+# Time steps to include
+TIME_STEPS:
+  - 200
+  - 190
+# Isolevel for progress variable
+ISOLEVEL: 0.8
+# Target column name
+TARGET_VAR: "DW_FDS"
+# Target label for plots
+TARGET_LABEL: "Sd"
+# Histogram bin count
+HIST_BINS: 50
+
+# Cluster on spatial coordinates (x,y,z) in addition to features
+CLUSTER_ON_SPATIAL: false
+
+# Feature list for clustering
+CLUSTER_FEATURES_INCLUDE:
+  - "curvature"
+
+# Feature list for model training
+MODEL_FEATURES_INCLUDE:
+  - "curvature"
+  - "dcurvdx"
+  - "dcurvdy"
+  - "u_n"
+  - "u_t"
+  - "du_ndx"
+  - "du_ndy"
+
+# Features to exclude
+FEATURES_EXCLUDE: []
+
+# Column used for curvature bins
+CURVATURE_COLUMN: "curvature"
+# Curvature bounds (low, high)
+CURVATURE_BOUNDS:
+  - -0.01
+  - 0.01
+
+# Minimum samples per cluster
+MIN_CLUSTER_SAMPLES: 50
+# Test split fraction
+TEST_SIZE: 0.25
+# RNG seed
+RANDOM_STATE: 44
+
+# RandomForest parameters
+MODEL_PARAMS:
+  # Number of trees
+  n_estimators: 400
+  # Max tree depth (null for unlimited)
+  max_depth: null
+  # RNG seed
+  random_state: 44
+  # Parallel jobs (-1 uses all cores)
+  n_jobs: -1
+
+# Top N features to print
+TOPN_PRINT: 12
+# Top N features for heatmap
+TOPN_HEATMAP: 25
+
+# Prefer SHAP over permutation importance
+PREFER_SHAP: true
+# Max samples for SHAP evaluation
+SHAP_SAMPLE_MAX: 1000
+
+# Output base directory for figures (relative to project root)
+OUTPUT_BASE_DIR: "report_figures/results/SHAP"
+# Figure DPI
+FIG_DPI: 300

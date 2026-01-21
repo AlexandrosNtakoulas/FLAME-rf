@@ -4,6 +4,8 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
+FRONT_HDF_KEY = "front"
+
 @dataclass(frozen=True)
 class Case:
     base_dir: Path
@@ -23,7 +25,7 @@ def folder(c: Case) -> Path:
 
 def front_filename(c: Case, iso: float) -> str:
     tag = "post_" if c.post else ""
-    return f"extracted_flame_front_{tag}{c.time_step}_iso_{iso}.csv"
+    return f"extracted_flame_front_{tag}{c.time_step}_iso_{iso}.hdf5"
 
 def front_path(c: Case, iso: float) -> Path:
     return folder(c) / front_filename(c, iso)
@@ -36,7 +38,14 @@ def load_front_csv(
     required_cols: list[str] | None = None,
 ) -> pd.DataFrame:
     fp = front_path(c, iso)
-    df = pd.read_csv(fp)
+    if fp.exists():
+        df = pd.read_hdf(fp, key=FRONT_HDF_KEY)
+    else:
+        csv_fp = fp.with_suffix(".csv")
+        if csv_fp.exists():
+            df = pd.read_csv(csv_fp)
+        else:
+            raise FileNotFoundError(f"Missing front file: {fp}")
 
     if dtype is not None:
         num_cols = df.select_dtypes(include=[np.number]).columns
@@ -48,6 +57,16 @@ def load_front_csv(
             raise ValueError(f"Missing columns {missing} in {fp.name}")
 
     return df
+
+
+def load_front_hdf5(
+    c: Case,
+    iso: float,
+    *,
+    dtype: str | None = "float32",
+    required_cols: list[str] | None = None,
+) -> pd.DataFrame:
+    return load_front_csv(c, iso, dtype=dtype, required_cols=required_cols)
 
 def load_fronts(
     c: Case,

@@ -1,14 +1,14 @@
 # Time step range (inclusive)
-TIME_STEP_START: 200
+TIME_STEP_START: 270
 # End time step (inclusive)
-TIME_STEP_END: 300
+TIME_STEP_END: 290
 
 # Case parameters
 PHI: 0.40
 # Lattice size string (e.g., "025", "100")
 LAT_SIZE: "025"
 # Use post-processed field files
-POST: true
+POST: False
 
 # Base directory for extracted field CSVs (relative to project root)
 BASE_DIR: "data/fields"
@@ -22,16 +22,17 @@ SORT_COLS:
 # Coordinate tolerance for equality checks (0 disables tolerance)
 COORD_TOL: 0.0
 
+# Remove temporal mean from snapshots before DMD
+REMOVE_MEAN: False
+
 # Keep only points with x > threshold
-X_THRESHOLD: 300.0
-# Backward-compat alias (older notebooks use X_THESHOLD)
-X_THESHOLD: 300.0
+X_THRESHOLD: 320.0
 
 # Output directory for plots (relative to project root)
-OUT_DIR: "report_figures/results/DMD/h_025"
+OUT_DIR: "report_figures/case_studies/DMD"
 
 # Optional truncated SVD rank for DMD (null = no limit)
-DMD_SVD_RANK: 10
+DMD_SVD_RANK: null
 
 # Physical dt (null uses timestep spacing)
 DT: null
@@ -43,14 +44,35 @@ FREQ_TOL: 1.0e-12
 # Plot controls
 N_MODES_TO_PLOT: 10
 NORMALIZE_MODE_FOR_PLOT: true
-CONTOUR_LEVELS_FILLED: 60
-CONTOUR_LEVELS_LINES: 12
-MODE_CONTOUR_LEVELS_FILLED: 20
+CONTOUR_LEVELS_FILLED: 120
+CONTOUR_LEVELS_LINES: 120
+MODE_CONTOUR_LEVELS_FILLED: 120
 COORD_X: "x"
 COORD_Y: "y"
 
 # Optional zoom window (null disables)
 XLIM:
-  - 300
+  - 320
   - 380
 YLIM: null
+
+# Plot styling (optional)
+PLOT_FONT_FAMILY: "CMU Serif"
+PLOT_FONT_SIZE: 20
+FIG_DPI: 250
+FIG_SIZE:
+  - 6.8
+  - 6.2
+COLOR_DATA: "#77b5b6"
+COLOR_DATA_EDGE: "#378d94"
+COLOR_PRED: "#9671bd"
+COLOR_PRED_EDGE: "#6a408d"
+COLOR_NEUTRAL: "#7e7e7e"
+COLOR_LINE: "#8a8a8a"
+PLOT_USE_TEX: True
+
+# Optional:
+PLOT_TEX_PREAMBLE:
+  - "\\usepackage{amsmath}"
+  - "\\usepackage{amssymb}"
+  - "\\usepackage{bm}"

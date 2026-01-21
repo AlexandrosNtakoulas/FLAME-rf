@@ -1,0 +1,98 @@
+# Time step range (inclusive)
+TIME_STEP_START: 200
+TIME_STEP_END: 290
+
+# Prediction range (inclusive, optional)
+PRED_TIME_STEP_START: 291
+PRED_TIME_STEP_END: 300
+
+# Case parameters
+PHI: 0.40
+LAT_SIZE: "025"
+
+# Structured grid base directory (relative to project root)
+BASE_DIR: "data/fields/structured_grids"
+
+# Optional override for case directory (relative to project root)
+CASE_DIR: null
+
+# File naming
+OUTPUT_FILE_STEM: "structured_fields"
+FILE_INDEX_PAD: 5
+POINTS_FNAME: "points.hdf5"
+
+# Field to model (dataset name in HDF5)
+FIELD_NAME: "t"
+
+# Use time attribute from HDF5 for ordering (falls back to file index)
+USE_TIME_ATTR: false
+
+# Training device ("cuda" or "cpu")
+DEVICE: "cuda"
+
+# Data normalization
+REMOVE_MEAN: False
+EPS: 1.0e-6
+
+# Sequence length (number of past steps as input)
+HISTORY: 7
+
+# Train/test split (fraction of samples for training)
+TRAIN_FRACTION: 0.8
+
+# Training hyperparameters
+EPOCHS: 200
+BATCH_SIZE: 4
+LR: 5.0e-4
+WEIGHT_DECAY: 1.0e-6
+DROPOUT: 0.0
+
+# Model architecture
+HIDDEN_CHANNELS:
+  - 16
+  - 32
+  - 16
+KERNEL_SIZE: 3
+PREDICT_DELTA: true
+
+HISTORY_CANDIDATES: [5] 
+HISTORY_STUDY_EPOCHS: 100
+PRED_WINDOW: 5
+
+# Logging
+LOG_EVERY: 20
+SEED: 0
+
+# Plotting
+PLOT_SLICE_INDEX: null
+
+# Isotherm/isocontour comparison
+ISO_VALUE: 3.8
+
+# Prediction window analysis (optional)
+PRED_WINDOW: 10
+PRED_START_INDEX: null
+
+# Output directory for prediction (relative to project root)
+PRED_OUT_DIR: "data/fields/cnn_predictions"
+
+# Plot styling (optional)
+PLOT_FONT_FAMILY: "CMU Serif"
+PLOT_FONT_SIZE: 20
+FIG_DPI: 250
+FIG_SIZE:
+  - 6.8
+  - 6.2
+COLOR_DATA: "#77b5b6"
+COLOR_DATA_EDGE: "#378d94"
+COLOR_PRED: "#9671bd"
+COLOR_PRED_EDGE: "#6a408d"
+COLOR_NEUTRAL: "#7e7e7e"
+COLOR_LINE: "#8a8a8a"
+PLOT_USE_TEX: True
+
+# Optional:
+PLOT_TEX_PREAMBLE:
+  - "\\usepackage{amsmath}"
+  - "\\usepackage{amssymb}"
+  - "\\usepackage{bm}"

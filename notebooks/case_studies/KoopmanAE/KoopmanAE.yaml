@@ -1,0 +1,100 @@
+# Time step range (inclusive)
+TIME_STEP_START: 200
+# End time step (inclusive)
+TIME_STEP_END: 299
+
+# Case parameters
+PHI: 0.40
+# Lateral domain size string (e.g., "025", "100")
+LAT_SIZE: "025"
+# Use post-processed field files
+POST: False
+
+# Base directory for extracted field CSVs (relative to project root)
+BASE_DIR: "data/fields/unstructured"
+# Field name to model
+VAR_NAME: "T"
+# Column order used to build the state vector
+SORT_COLS:
+  - "x"
+  - "y"
+# Coordinate tolerance for equality checks (0 disables tolerance)
+COORD_TOL: 0.0
+
+# Remove temporal mean from snapshots before normalization
+REMOVE_MEAN: False
+
+# Contour levels for filled plots (match DMD)
+CONTOUR_LEVELS_FILLED: 60
+
+# Keep only points with x > threshold
+X_THRESHOLD: 330.0
+
+# Training device ("cuda" or "cpu")
+DEVICE: "cuda"
+# Physical dt for the Koopman operator
+DT: 1.0
+
+# Dropout probability (0 disables)
+DROPOUT: 0.0
+
+# Move model to CPU after training
+OFFLOAD_MODEL_TO_CPU: true
+
+# Use PCA before training
+USE_PCA: False
+# PCA dimension
+PCA_DIM: 30
+
+# Latent dimension
+Z_DIM: 32
+# Encoder hidden sizes
+ENC_HIDDEN:
+  - 32
+  - 64
+  - 128
+# Decoder hidden sizes
+DEC_HIDDEN:
+  - 64
+  - 32
+# Training epochs
+EPOCHS: 1800
+# Batches per epoch
+BATCHES_PER_EPOCH: 50
+# Batch size
+BATCH_SIZE: 10
+# Rollout length
+ROLLOUT_LEN: 10
+
+# Optimizer learning rate
+LR: 1e-3
+# Optimizer weight decay
+WEIGHT_DECAY: 1.0e-7
+
+# Loss weights
+W_RECON: 1.0
+W_PRED: 5.0
+W_LAT: 0.5
+W_STAB: 0.0
+
+# RNG seed
+SEED: 0
+
+# Figure output directory (relative to project root)
+FIG_DIR: "report_figures/case_studies/KoopmanAE"
+
+# Plot styling (optional)
+PLOT_FONT_FAMILY: "Courier New"
+PLOT_FONT_SIZE: 20
+FIG_DPI: 250
+FIG_SIZE:
+  - 6.8
+  - 6.2
+COLOR_DATA: "#77b5b6"
+COLOR_DATA_EDGE: "#378d94"
+COLOR_PRED: "#9671bd"
+COLOR_PRED_EDGE: "#6a408d"
+COLOR_NEUTRAL: "#7e7e7e"
+COLOR_LINE: "#8a8a8a"
+PLOT_USE_TEX: False
+PLOT_TEX_PREAMBLE: []

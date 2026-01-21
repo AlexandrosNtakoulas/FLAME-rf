@@ -13,7 +13,6 @@ TIME_STEPS:
   - 199
   - 200
   - 201
-  - 202
 # Isolevel for progress variable
 ISOLEVEL: 0.6
 # Target column name
@@ -78,6 +77,22 @@ MODEL_PARAMS:
   n_jobs: -1
 
 # Output base directory for figures (relative to project root)
-OUTPUT_BASE_DIR: "report_figures/results/backward_selection"
+OUTPUT_BASE_DIR: "report_figures/case_studies/Feature_selection_backward"
 # Figure DPI
 FIG_DPI: 300
+
+# Plot styling (optional)
+PLOT_FONT_FAMILY: "Courier New"
+PLOT_FONT_SIZE: 20
+FIG_DPI: 250
+FIG_SIZE:
+  - 6.8
+  - 6.2
+COLOR_DATA: "#77b5b6"
+COLOR_DATA_EDGE: "#378d94"
+COLOR_PRED: "#9671bd"
+COLOR_PRED_EDGE: "#6a408d"
+COLOR_NEUTRAL: "#7e7e7e"
+COLOR_LINE: "#8a8a8a"
+PLOT_USE_TEX: False
+PLOT_TEX_PREAMBLE: []

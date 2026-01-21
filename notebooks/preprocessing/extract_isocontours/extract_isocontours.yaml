@@ -4,28 +4,28 @@ DATA_BASE_DIR: "data/nek"
 ISOCONTOUR_BASE_DIR: "data/isocontours"
 
 # Single time step (used if MULTI_TIME_STEP is false)
-TIME_STEP: 202
+TIME_STEP: 200
 
 # Enable multi-time-step extraction
 MULTI_TIME_STEP: False
 # Start time step for multi extraction (inclusive)
-TIME_STEP_START: 270
+TIME_STEP_START: 145
 # End time step for multi extraction (inclusive)
-TIME_STEP_END: 301
+TIME_STEP_END: 150
 
 # Case parameters
 PHI: 0.40
 # Lateral domain size string (e.g., "025", "100")
-LAT_SIZE: "100"
+LAT_SIZE: "200"
 # Reference temperature
 T_REF: 300
 # Reference pressure
 P_REF: 1.0e05
 
 # Use post-processed data
+# When POST is true, input files are named "po_postPremix0.fxxxxx".
+# When POST is false, input files are named "premix0.fxxxxx".
 POST: true
-# Base file name in the dataset
-FILE_NAME: "po_postPremix"
 
 # Compute flags
 COMP_VEL_JACOBIAN: true
@@ -40,7 +40,9 @@ CANTERA_YAML: "flamekit/chemical_mech/BurkeH2.yaml"
 
 # Progress variable isolevels (0-1)
 PROGRESS_LEVELS:
+  - 0.4
   - 0.6
+  - 0.8
 
 
 

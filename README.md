@@ -99,13 +99,11 @@ pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 pip3 install vtk
 pip3 install pyvista
 pip3 install pyvtk
-pip3 install shap
-pip3 install hdbscan
-pip3 install umap-learn
 pip3 install trame trame-vtk trame-vuetify
 pip3 install pympler
 pip3 install memory_profiler
 pip3 install pydmd
+pip3 install tables
 
 git clone https://github.com/ExtremeFLOW/pySEMTools.git
 cd pySEMTools/
@@ -117,6 +115,7 @@ Alternative (use the requirements file):
 pip3 install -r requirements.txt
 ```
 
+YOU NEED TO ALSO INSTALL LATEX and the specific font type
 ## Usage
 
 ### 1) Place Nek5000 output files (not tracked by git)
@@ -136,7 +135,7 @@ Notes:
   - `POST: false` -> `premix0.fXXXXX`
 - Always include the first time step file (`...f00001`) in the same folder.
 
-### 2) Extract flame fronts (CSV)
+### 2) Extract flame fronts (HDF5)
 1. Edit `notebooks/preprocessing/extract_isocontours/extract_isocontours.yaml` with your case settings.
 2. Run `notebooks/preprocessing/extract_isocontours/extract_isocontours.ipynb`.
 
@@ -145,11 +144,11 @@ Output example:
 data/isocontours/
 └── phi0.40/
     └── h400x025_ref/
-        ├── extracted_flame_front_post_<TIME_STEP>_iso_<ISO>.csv
+        ├── extracted_flame_front_post_<TIME_STEP>_iso_<ISO>.hdf5
         └── ...
 ```
 
-### 3) Extract fields (CSV)
+### 3) Extract fields (HDF5)
 1. Edit `notebooks/preprocessing/extract_fields/extract_fields.yaml`.
 2. Run `notebooks/preprocessing/extract_fields/extract_fields.ipynb`.
 
@@ -158,7 +157,7 @@ Output example:
 data/fields/
 └── phi0.40/
     └── h400x025_ref/
-        ├── extracted_field_post_<TIME_STEP>.csv
+        ├── extracted_field_post_<TIME_STEP>.hdf5
         └── ...
 ```
 
