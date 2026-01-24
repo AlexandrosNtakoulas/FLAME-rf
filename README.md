@@ -168,3 +168,5 @@ For example:
 - `notebooks/case_studies/Feature_importance_SHAP_curvature_bins/Feature_importance_SHAP_curvature_bins.ipynb` uses `notebooks/case_studies/Feature_importance_SHAP_curvature_bins/Feature_importance_SHAP_curvature_bins.yaml`
 
 Tip: launch Jupyter from the repo root so relative paths resolve correctly.
+
+To run using MPI: PYTHONPATH=. mpirun -n 8 python notebooks/preprocessing/extract_fields/extract_fields.py

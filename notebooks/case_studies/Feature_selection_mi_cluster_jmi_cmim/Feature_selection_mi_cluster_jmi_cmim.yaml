@@ -67,7 +67,7 @@ CURVATURE_BOUNDS:
   - 0.1
 
 # Number of features per cluster
-K_SELECT_PER_CLUSTER: 12
+K_SELECT_PER_CLUSTER: 4
 # Minimum samples per cluster
 MIN_CLUSTER_SAMPLES: 50
 # RNG seed

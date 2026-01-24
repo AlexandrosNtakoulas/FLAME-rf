@@ -1,410 +1,38 @@
 from __future__ import annotations
+
+from pathlib import Path
+from typing import Optional, List, Tuple, Dict, Any, TYPE_CHECKING
+
 import numpy as np
 import pandas as pd
 from mpi4py import MPI
-from typing import Optional, List, Tuple
-from pysemtools.datatypes.msh import Mesh
-from pysemtools.datatypes.coef import Coef
-from pysemtools.datatypes.field import Field
-from pysemtools.io.ppymech.neksuite import pynekread
 
 import cantera as ct
-
-from pySEMTools.pysemtools.datatypes import FieldRegistry
-
 import pyvista as pv
-from pathlib import Path
 
+from pysemtools.datatypes.msh import Mesh
+from pysemtools.datatypes.coef import Coef
 from pysemtools.io.ppymech.neksuite import pynekread
-from dataclasses import replace
+from pysemtools.datatypes.field import FieldRegistry
 
-from .io_fronts import Case, folder
-from .io_fields import field_path, make_case_with_base_dir
-
-
-class SEMDataset:
-    def __init__(
-        self,
-        folder_name: str,
-        file_name: str,
-        time_step: int,
-        comm: Optional[MPI.Comm] = None,
-        scalar_names: List[str] = None
-    ) -> None:
-        self.comm = comm
-        self.msh = Mesh(comm, create_connectivity=False)
-        self.fld = FieldRegistry(comm)
-        self.scalar_names = scalar_names
-        self.dataframe = None
-        self.file_name = file_name
-        self.folder_name = folder_name
-        self.time_step = int(time_step)
-
-        project_root = Path(__file__).resolve().parents[1]  # .../Code
-        self.folder = (project_root / Path(folder_name).expanduser()).resolve()
-
-        # Build filenames 
-        gname = self.folder / f"{self.file_name}0.f00001"
-        fname = self.folder / f"{self.file_name}0.f{self.time_step:05d}"
-
-        # read coordinates/mesh from geometry file
-        pynekread(str(gname), comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
-        # read actual field data from timestep file
-        pynekread(str(fname), comm, msh=self.msh, fld=self.fld, overwrite_fld=True)
-        # Build derivative operators
-        self.coef = Coef(self.msh, comm)
-        # Cache coords -> delete?
-        self.x, self.y, self.z = self.msh.x, self.msh.y, self.msh.z
-        # Velocity
-        vel = self.fld.fields.get("vel", None)
-        self.u, self.v = vel[0], vel[1]
-        #Pressure
-        self.p = _unwrap_scalar(self.fld.fields.get("pres", None))
-        # Temperature
-        self.t = _unwrap_scalar(self.fld.fields.get("temp", None))
-        # Scalars
-        self.scalars = self.fld.fields.get("scal", None)
-        return
-
-    def grad2d(self, f: np.ndarray):
-        """Return jacobian of scalar field"""
-        dfdx = self.coef.dudxyz(f, self.coef.drdx, self.coef.dsdx)
-        dfdy = self.coef.dudxyz(f, self.coef.drdy, self.coef.dsdy)
-        return dfdx.ravel(), dfdy.ravel()
-
-    def hess2d(self, f: np.ndarray):
-        """"Return hessian of scalar field"""
-        dfdx, dfdy = self.grad2d(f)
-        d2xx = self.coef.dudxyz(dfdx, self.coef.drdx, self.coef.dsdx)
-        d2xy = self.coef.dudxyz(dfdx, self.coef.drdy, self.coef.dsdy)
-        d2yy = self.coef.dudxyz(dfdy, self.coef.drdy, self.coef.dsdy)
-        return d2xx, d2xy, d2yy
-
-    def create_dataframe(
-            self,
-            compute_vel_jacobian: bool = False,
-            compute_vel_hessian: bool = False,
-            compute_reaction_rates: bool = False,
-            compute_T_grad: bool = False,
-            compute_curv_grad: bool = False,
-            compute_local_vel_jacobian: bool = False,
-            cantera_inputs: Optional[List[str, float]] = None,
-            compute_progress_var: bool = False,
-            phi: Optional[float] = None,
-            progress_fuel: str = "H2",
-            progress_oxidizer: str = "O2:0.21, N2:0.79",
-            progress_loglevel: int = 0,
-    ) -> pd.DataFrame:
-        """
-        Create and return a dataframe with the DNS data
-
-        Parameters
-        ----------
-        compute_vel_jacobian: boolean
-
-        compute_vel_hessian: boolean
-
-        compute_reaction_rates: boolean
-
-        cantera_inputs: list
-            List of cantera file, species list, equivalence ratio, T_ref, p_ref
-
-        compute_progress_var: boolean
-            If True, add progress_var = (T - Tcold) / (Thot - Tcold) using a 1D Cantera flame.
-            Also adds laminar flame speed S_L from the same 1D flame.
-            Requires cantera_inputs and phi.
-        """
-        # Add basic fields
-        data = {
-            "x": self.x.reshape(-1),
-            "y": self.y.reshape(-1),
-            "u": self.u.reshape(-1),
-            "v": self.v.reshape(-1),
-            "T": self.t.reshape(-1),
-            "p": self.p.reshape(-1),
-        }
-        # Add scalar values
-        for i in range(len(self.scalars)):
-            data.update(
-                {
-                    self.scalar_names[i]: np.array(self.scalars[i]).reshape(-1)
-                }
-            )
-        self.dataframe = pd.DataFrame(data)
-
-        if compute_progress_var:
-            if cantera_inputs is None or len(cantera_inputs) < 4:
-                raise ValueError("cantera_inputs must include [cantera_file, _, t_ref, p_ref]")
-            if phi is None:
-                raise ValueError("phi must be provided to compute progress_var")
-            cantera_file = cantera_inputs[0]
-            t_ref = cantera_inputs[2]
-            p_ref = cantera_inputs[3]
-            self.add_progress_variable_to_dataframe(
-                cantera_file=cantera_file,
-                phi=phi,
-                t_ref=t_ref,
-                p_ref=p_ref,
-                fuel=progress_fuel,
-                oxidizer=progress_oxidizer,
-                loglevel=progress_loglevel,
-            )
-
-        if compute_vel_jacobian:
-            self.add_vel_jacobian_to_dataframe()
-        if compute_vel_hessian:
-            self.add_vel_hessian_to_dataframe()
-        if compute_reaction_rates:
-            self.add_reaction_rates_to_dataframe(
-                cantera_file= cantera_inputs[0],
-                species_list= cantera_inputs[1],
-                t_ref= cantera_inputs[2],
-                p_ref= cantera_inputs[3]
-            )
-        if compute_T_grad:
-            self.dataframe["dTdx"], self.dataframe["dTdy"] = self.grad2d(self.t)
-        if compute_curv_grad:
-            self.dataframe["dcurvdx"], self.dataframe["dcurvdy"] = self.grad2d(self.scalars[10])
-        if compute_local_vel_jacobian:
-            self.dataframe["du_ndx"], self.dataframe["du_ndy"] = self.grad2d(self.scalars[14])
-            self.dataframe["du_tdx"], self.dataframe["du_tdy"] = self.grad2d(self.scalars[15])
-        return self.dataframe
-
-    def add_vel_jacobian_to_dataframe(self):
-        """Add jacobian of velocity to the dataframe"""
-        self.dataframe["dudx"], self.dataframe["dudy"] = self.grad2d(self.u)
-        self.dataframe["dvdx"], self.dataframe["dvdy"] = self.grad2d(self.v)
-
-    def add_vel_hessian_to_dataframe(self):
-        """Add hessian of velocity to the dataframe"""
-        self.dataframe["d2u_xx"], self.dataframe["d2u_xy"], self.dataframe["d2u_yy"] \
-            = self.hess2d(self.u)
-        self.dataframe["d2v_xx"], self.dataframe["d2v_xy"], self.dataframe["d2v_yy"] \
-            = self.hess2d(self.v)
-        
-    def add_reaction_rates_to_dataframe(
-            self,
-            cantera_file: str = None,
-            species_list: List[str] = None,
-            t_ref: float = None,
-            p_ref: int = None
-    ):
-        """Add reaction rates and lewis number of deficient reactant to the dataframe"""
-        if species_list is None:
-            species_list = ['H2', 'O2', 'H2O', 'H', 'O', 'OH', 'HO2', 'H2O2', 'N2']
-        y_matrix = np.stack([self.dataframe[name].values for name in species_list], axis=1)
-        gas = ct.Solution(cantera_file)
-        n_points = y_matrix.shape[0]
-        n_species = gas.n_species
-        reaction_rates_molar = np.zeros((n_points, n_species))  # kmol/m3/s
-        reaction_rates_mass = np.zeros((n_points, n_species))   # kg/m3/s
-        heat_cond = np.zeros(n_points)  # W/m/K
-        thermal_diff = np.zeros(n_points)  # cm^2/s
-        MW = gas.molecular_weights  # kg/kmol, length = n_species
-        for i in range(n_points):
-            gas.TPY = self.dataframe["T"].values[i] * t_ref, p_ref, y_matrix[i, :]
-            reaction_rates_molar[i, :] = gas.net_production_rates
-            # convert molar -> mass [kg/m3/s]
-            reaction_rates_mass[i, :] = reaction_rates_molar[i, :] * MW
-            heat_cond[i] = gas.thermal_conductivity
-            if gas.density > 0 and gas.cp_mass > 0:
-                alpha_m2_s = heat_cond[i] / (gas.density * gas.cp_mass)
-            else:
-                alpha_m2_s = np.nan
-            thermal_diff[i] = alpha_m2_s * 1.0e4
-        F_O_stoich = (0.02851163 / 0.2262686)
-        self.dataframe["phi_loc"] = (self.dataframe["H2"] / self.dataframe["O2"]) / F_O_stoich
-        for k, sp in enumerate(gas.species_names):
-            self.dataframe[f"omega_{sp}"] = reaction_rates_mass[:, k]
-        self.dataframe["heat_conductivity"] = heat_cond
-        self.dataframe["thermal_diffusivity"] = thermal_diff
-        return
-
-    def add_progress_variable_to_dataframe(
-            self,
-            *,
-            cantera_file: str,
-            phi: float,
-            t_ref: float,
-            p_ref: float,
-            fuel: str = "H2",
-            oxidizer: str = "O2:0.21, N2:0.79",
-            loglevel: int = 0,
-    ) -> None:
-        width = _domain_width(self.x, self.y)
-        comm = self.comm
-        rank = comm.rank if comm is not None else 0
-        if rank == 0:
-            t_cold_nd, t_hot_nd, s_l_cm_s, l_ref_cm = _cantera_temperature_bounds(
-                cantera_file=cantera_file,
-                phi=phi,
-                t_ref=t_ref,
-                p_ref=p_ref,
-                width=width,
-                fuel=fuel,
-                oxidizer=oxidizer,
-                loglevel=loglevel,
-            )
-        else:
-            t_cold_nd, t_hot_nd, s_l_cm_s, l_ref_cm = None, None, None, None
-
-        if comm is not None:
-            t_cold_nd = comm.bcast(t_cold_nd, root=0)
-            t_hot_nd = comm.bcast(t_hot_nd, root=0)
-            s_l_cm_s = comm.bcast(s_l_cm_s, root=0)
-            l_ref_cm = comm.bcast(l_ref_cm, root=0)
-
-        denom = t_hot_nd - t_cold_nd
-        if abs(denom) < 1e-12:
-            raise ValueError("Invalid temperature bounds for progress_var computation")
-        self.dataframe["progress_var"] = (self.dataframe["T"] - t_cold_nd) / denom
-        self.dataframe["S_L"] = s_l_cm_s
-        self.dataframe["L_ref"] = l_ref_cm
-        return
-
-    def extract_flame_front(
-            self,
-            c_level: float = None,
-            scalar_name: str = "T",
-    ) -> pd.DataFrame:
-        """
-        2D version: build a VTK unstructured QUAD grid from SEM coordinates
-        and extract an isocontour at scalar_name = c_level.
-
-        Assumes 2D data (one layer in z); z may be constant.
-        """
-
-        # ------------------------------------------------------------------
-        # 1) Normalize coordinates to shape (nelv, ny, nx)
-        # ------------------------------------------------------------------
-        x = np.asarray(self.x)
-        y = np.asarray(self.y)
-        z = np.asarray(self.z)
-
-        # Expect (nelv, nz, ny, nx) with nz = 1 for 2D
-        nelv, nz, ny, nx = x.shape
-        x = x[:, 0, :, :]
-        y = y[:, 0, :, :]
-        z = z[:, 0, :, :]
+if TYPE_CHECKING:
+    from flamekit.io_fronts import Case
 
 
-        # ------------------------------------------------------------------
-        # 2) Build point array: shape (N_points, 3)
-        #    Flatten with loop order (e, j, i) using ravel(order="C")
-        # ------------------------------------------------------------------
-        points = np.column_stack([
-            x.ravel(order="C"),
-            y.ravel(order="C"),
-            z.ravel(order="C"),
-        ])  # (N_points, 3)
-        n_points = points.shape[0]
-        def idx(e: int, j: int, i: int) -> int:
-            """Global point index for (e, j, i) matching ravel(order='C')."""
-            return ((e * ny + j) * nx + i)
+# ======================================================================================
+# Helpers
+# ======================================================================================
 
-        # ------------------------------------------------------------------
-        # 3) Build QUAD cell connectivity
-        # ------------------------------------------------------------------
-        cells = []
-        cell_types = []
-
-        for e in range(nelv):
-            for j in range(ny - 1):
-                for i in range(nx - 1):
-                    n0 = idx(e, j, i)
-                    n1 = idx(e, j, i + 1)
-                    n2 = idx(e, j + 1, i + 1)
-                    n3 = idx(e, j + 1, i)
-
-                    # VTK legacy format: [n_points_in_cell, p0, p1, p2, p3]
-                    cells.extend([4, n0, n1, n2, n3])
-                    cell_types.append(pv.CellType.QUAD)
-
-        cells = np.asarray(cells, dtype=np.int64)
-        cell_types = np.asarray(cell_types, dtype=np.uint8)
-
-        if cells.size == 0:
-            raise RuntimeError("UnstructuredGrid has no cells – check mesh dimensions.")
-
-        # ------------------------------------------------------------------
-        # 4) Create UnstructuredGrid
-        # ------------------------------------------------------------------
-        grid = pv.UnstructuredGrid(cells, cell_types, points)
-
-        # ------------------------------------------------------------------
-        # 5) Attach fields as point data
-        # ------------------------------------------------------------------
-        u = np.asarray(self.u)
-        u = u[:,0,:,:]
-
-        v = np.asarray(self.v)
-        v = v[:,0,:,:]
-
-        T = np.asarray(self.fld.fields["temp"])
-        T = T[0, :, 0, :, :]
-
-        grid.point_data["u"] = u.ravel(order="C")
-        grid.point_data["v"] = v.ravel(order="C")
-        grid.point_data["T"] = T.ravel(order="C")
-
-        for name, values in zip(self.scalar_names, self.scalars):
-            arr = np.asarray(values)
-            arr = arr[:, 0, :, :]
-            grid.point_data[name] = arr.ravel(order="C")
-
-        if self.dataframe is not None:
-            # columns already flattened in the same order as x.reshape(-1)
-            skip_cols = set(["x", "y", "u", "v", "T"])
-            if self.scalar_names is not None:
-                skip_cols.update(self.scalar_names)
-
-            for col in self.dataframe.columns:
-                if col in skip_cols:
-                    continue  # these are already on the grid
-
-                arr_flat = self.dataframe[col].to_numpy()
-                if arr_flat.size != n_points:
-                    continue
-
-                # Attach as point-data scalar (or vector if needed later)
-                grid.point_data[col] = arr_flat
-        # ------------------------------------------------------------------
-        # 6) Extract isocontour of the temperature field
-        # ------------------------------------------------------------------
-        if c_level is None:
-            raise ValueError("c_level must be specified for isocontour extraction")
-        if scalar_name not in grid.point_data:
-            raise ValueError(f"scalar_name={scalar_name!r} not found in grid point data")
-
-        Tmin, Tmax = grid.get_data_range(scalar_name)
-        if not (Tmin <= c_level <= Tmax):
-            raise ValueError(
-                f"c_level={c_level} is outside {scalar_name} range [{Tmin}, {Tmax}]"
-            )
-
-        iso = grid.contour(scalars=scalar_name, isosurfaces=[c_level])
-
-        # ------------------------------------------------------------------
-        # 7) Build DataFrame with coordinates + all variables on the contour
-        # ------------------------------------------------------------------
-        pts = iso.points  # shape (N, 3)
-        data = {
-            "x": pts[:, 0],
-            "y": pts[:, 1],
-            "z": pts[:, 2],
-        }
-
-        for name, arr in iso.point_data.items():
-            data[name] = np.asarray(arr)
-
-        front = pd.DataFrame(data)
-        return front
-
-def _unwrap_scalar(x):
-    return x[0] if isinstance(x, list) else x
+def _unwrap_scalar(x: Any) -> Any:
+    """Unwrap Nek scalar fields that may be stored as [arr] or arr."""
+    if x is None:
+        return None
+    if isinstance(x, (list, tuple)) and len(x) == 1:
+        return x[0]
+    return x
 
 
-_PROGRESS_TEMP_CACHE = {}
+_PROGRESS_TEMP_CACHE: Dict[Tuple[Any, ...], Tuple[float, float, float, float]] = {}
 
 
 def _domain_width(x: np.ndarray, y: np.ndarray) -> float:
@@ -419,6 +47,7 @@ def _domain_width(x: np.ndarray, y: np.ndarray) -> float:
 def _resolve_mechanism_path(cantera_file: str) -> Path:
     mech_path = Path(cantera_file).expanduser()
     if not mech_path.is_absolute():
+        # assume flamekit repo layout: <repo>/flamekit/datasets.py
         project_root = Path(__file__).resolve().parents[1]
         mech_path = (project_root / mech_path).resolve()
     if not mech_path.exists():
@@ -436,7 +65,15 @@ def _cantera_temperature_bounds(
     fuel: str,
     oxidizer: str,
     loglevel: int,
-    ) -> Tuple[float, float, float, float]:
+) -> Tuple[float, float, float, float]:
+    """
+    Compute reference quantities from a 1-D Cantera FreeFlame.
+
+    Returns
+    -------
+    t_cold_nd, t_hot_nd, s_l_cm_s, l_ref_cm
+    where t_*_nd are nondimensional (divided by t_ref).
+    """
     mech_path = _resolve_mechanism_path(cantera_file)
     cache_key = (
         str(mech_path),
@@ -461,16 +98,19 @@ def _cantera_temperature_bounds(
     flame.set_refine_criteria(curve=0.2, slope=0.1, ratio=2)
     flame.solve(loglevel=loglevel, auto=True)
 
-    # Use left/right boundary temperatures instead of extrema.
     t_cold = float(flame.T[0])
     t_hot = float(flame.T[-1])
     t_cold_nd = t_cold / t_ref
     t_hot_nd = t_hot / t_ref
+
+    # laminar flame speed
     if hasattr(flame, "velocity"):
         s_l_m_s = float(flame.velocity[0])
     else:
+        # older Cantera API
         s_l_m_s = float(flame.u[0])
 
+    # a practical "reference thickness"
     grid = np.asarray(flame.grid, dtype=float)
     dTdx = np.gradient(flame.T, grid)
     max_grad = float(np.max(np.abs(dTdx)))
@@ -480,64 +120,544 @@ def _cantera_temperature_bounds(
 
     s_l_cm_s = s_l_m_s * 100.0
     l_ref_cm = l_ref_m * 100.0
+
     _PROGRESS_TEMP_CACHE[cache_key] = (t_cold_nd, t_hot_nd, s_l_cm_s, l_ref_cm)
     return t_cold_nd, t_hot_nd, s_l_cm_s, l_ref_cm
 
 
-def extract_full_field_csv(
-    case: Case,
-    data_base_dir: Path,
-    output_base_dir: Path,
-    *,
-    file_name: str,
-    scalar_names: list[str],
-    comm: Optional[MPI.Comm] = None,
-    compute_vel_jacobian: bool = False,
-    compute_vel_hessian: bool = False,
-    compute_reaction_rates: bool = False,
-    compute_T_grad: bool = False,
-    compute_curv_grad: bool = False,
-    compute_local_vel_jacobian: bool = False,
-    compute_progress_var: bool = True,
-    cantera_inputs: Optional[List[str, float]] = None,
-) -> Path:
-    comm = comm or MPI.COMM_WORLD
-    rank = comm.rank
+# ======================================================================================
+# SEMDataset
+# ======================================================================================
 
-    data_case = make_case_with_base_dir(case, data_base_dir)
-    out_case = make_case_with_base_dir(case, output_base_dir)
+class SEMDataset:
+    """
+    Optimized workflow:
+      - Build mesh + coef once in __init__
+      - Reload only fields per timestep via reload_timestep()
+      - Build PyVista grid connectivity once via build_pyvista_grid_2d()
+      - Update point_data per timestep and contour without rebuilding connectivity
 
-    data_folder = folder(data_case)
-    out_path = field_path(out_case)
+    Notes on MPI:
+      - pySEMTools distributes elements across ranks when created with comm.
+      - Therefore all arrays in this class are **rank-local partitions** when running with MPI size>1.
+    """
 
-    if rank == 0:
-        out_path.parent.mkdir(parents=True, exist_ok=True)
+    def __init__(
+        self,
+        *,
+        folder_name: str,
+        file_name: str,
+        time_step: int,
+        comm: Optional[MPI.Comm] = None,
+        scalar_names: Optional[List[str]] = None,
+        geometry_step: int = 1,
+    ) -> None:
+        self.comm = comm
+        self.rank = comm.rank if comm is not None else 0
+        self.size = comm.size if comm is not None else 1
 
-    ds = SEMDataset(
-        file_name=file_name,
-        folder_name=str(data_folder),
-        time_step=case.time_step,
-        comm=comm,
-        scalar_names=scalar_names,
-    )
+        self.msh = Mesh(comm, create_connectivity=False)
+        self.fld = FieldRegistry(comm)
 
-    df = ds.create_dataframe(
-        compute_vel_jacobian=compute_vel_jacobian,
-        compute_vel_hessian=compute_vel_hessian,
-        compute_reaction_rates=compute_reaction_rates,
-        compute_T_grad=compute_T_grad,
-        compute_curv_grad=compute_curv_grad,
-        compute_local_vel_jacobian=compute_local_vel_jacobian,
-        cantera_inputs=cantera_inputs,
-        compute_progress_var=compute_progress_var,
-        phi=case.phi,
-    )
+        self.scalar_names: List[str] = list(scalar_names) if scalar_names else []
+        self.scalar_idx: Dict[str, int] = {name: i for i, name in enumerate(self.scalar_names)}
 
-    if rank == 0:
-        df.to_hdf(out_path, key="field", mode="w", format="table", index=False)
+        self.file_name = file_name
+        self.folder_name = folder_name
+        self.time_step = int(time_step)
 
-    del df
-    return out_path
+        # Resolve folder relative to repo root if needed
+        project_root = Path(__file__).resolve().parents[1]
+        self.folder = (project_root / Path(folder_name).expanduser()).resolve()
+
+        # Mesh (geometry) is read once
+        gname = self.folder / f"{self.file_name}0.f{int(geometry_step):05d}"
+        pynekread(str(gname), comm, msh=self.msh)
+
+        # Operators depend only on mesh
+        self.coef = Coef(self.msh, comm)
+
+        # Coordinates (rank-local partition)
+        self.x, self.y, self.z = self.msh.x, self.msh.y, self.msh.z
+
+        # Fields are loaded per timestep
+        self.u = self.v = self.p = self.t = None  # set in reload_timestep
+        self.scalars = None
+
+        # PyVista grid cache
+        self._pv_grid: Optional[pv.UnstructuredGrid] = None
+        self._pv_dims: Optional[Tuple[int, int, int, int]] = None  # (nelv,nz,ny,nx)
+
+        # Load initial timestep
+        self.reload_timestep(self.time_step)
+
+    # ----------------------------------------------------------------------------------
+    # I/O per timestep
+    # ----------------------------------------------------------------------------------
+
+    def reload_timestep(self, time_step: int) -> None:
+        self.time_step = int(time_step)
+        fname = self.folder / f"{self.file_name}0.f{self.time_step:05d}"
+        pynekread(str(fname), self.comm, fld=self.fld, overwrite_fld=True)
+
+        vel = self.fld.fields.get("vel", None)
+        if vel is None:
+            raise KeyError("Velocity field 'vel' not found in file.")
+        self.u, self.v = vel[0], vel[1]
+
+        self.p = _unwrap_scalar(self.fld.fields.get("pres", None))
+        self.t = _unwrap_scalar(self.fld.fields.get("temp", None))
+        if self.p is None:
+            raise KeyError("Pressure field 'pres' not found in file.")
+        if self.t is None:
+            raise KeyError("Temperature field 'temp' not found in file.")
+
+        self.scalars = self.fld.fields.get("scal", None)
+
+    # ----------------------------------------------------------------------------------
+    # SEM derivatives
+    # ----------------------------------------------------------------------------------
+
+    def grad2d_sem(self, f: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        dfdx = self.coef.dudxyz(f, self.coef.drdx, self.coef.dsdx)
+        dfdy = self.coef.dudxyz(f, self.coef.drdy, self.coef.dsdy)
+        return dfdx, dfdy
+
+    def hess2d_sem(self, f: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        dfdx, dfdy = self.grad2d_sem(f)
+        d2xx = self.coef.dudxyz(dfdx, self.coef.drdx, self.coef.dsdx)
+        d2xy = self.coef.dudxyz(dfdx, self.coef.drdy, self.coef.dsdy)
+        d2yy = self.coef.dudxyz(dfdy, self.coef.drdy, self.coef.dsdy)
+        return d2xx, d2xy, d2yy
+
+    # ----------------------------------------------------------------------------------
+    # Scalars
+    # ----------------------------------------------------------------------------------
+
+    def get_scalar(self, name: str) -> np.ndarray:
+        if self.scalars is None:
+            raise ValueError("No scalar fields ('scal') found in the dataset.")
+        if name not in self.scalar_idx:
+            raise KeyError(
+                f"Scalar {name!r} not found in scalar_names. "
+                f"Available names (len={len(self.scalar_names)}): {self.scalar_names[:10]}..."
+            )
+        i = int(self.scalar_idx[name])
+        if i >= len(self.scalars):
+            raise IndexError(
+                f"Scalar index for {name!r} is {i}, but only {len(self.scalars)} scalar fields exist "
+                f"in this file (FieldRegistry 'scal'). Check your SCALARS list."
+            )
+        return np.asarray(self.scalars[i])
+
+    # ----------------------------------------------------------------------------------
+    # Progress variable
+    # ----------------------------------------------------------------------------------
+
+    def compute_progress_var_array(
+        self,
+        *,
+        cantera_file: str,
+        phi: float,
+        t_ref: float,
+        p_ref: float,
+        fuel: str = "H2",
+        oxidizer: str = "O2:0.21, N2:0.79",
+        loglevel: int = 0,
+    ) -> np.ndarray:
+        """
+        progress_var = (T - Tcold_nd) / (Thot_nd - Tcold_nd)
+
+        Assumes self.t is nondimensional temperature (T/T_ref).
+        """
+        width = _domain_width(np.asarray(self.x), np.asarray(self.y))
+        comm = self.comm
+        rank = self.rank
+
+        if rank == 0:
+            t_cold_nd, t_hot_nd, _, _ = _cantera_temperature_bounds(
+                cantera_file=cantera_file,
+                phi=float(phi),
+                t_ref=float(t_ref),
+                p_ref=float(p_ref),
+                width=width,
+                fuel=fuel,
+                oxidizer=oxidizer,
+                loglevel=loglevel,
+            )
+        else:
+            t_cold_nd = t_hot_nd = None
+
+        if comm is not None:
+            t_cold_nd = comm.bcast(t_cold_nd, root=0)
+            t_hot_nd = comm.bcast(t_hot_nd, root=0)
+
+        denom = float(t_hot_nd - t_cold_nd)
+        if abs(denom) < 1e-12:
+            raise ValueError("Invalid temperature bounds for progress_var computation")
+
+        T = np.asarray(self.t)  # nondimensional
+        return (T - float(t_cold_nd)) / denom
+
+    # ----------------------------------------------------------------------------------
+    # PyVista: build connectivity once, update point_data each timestep
+    # ----------------------------------------------------------------------------------
+
+    def build_pyvista_grid_2d(self) -> pv.UnstructuredGrid:
+        """
+        Build and cache a PyVista UnstructuredGrid (QUADs) once.
+
+        Assumes 2D data stored as (nelv, nz=1, ny, nx) on each rank.
+        """
+        if self._pv_grid is not None:
+            return self._pv_grid
+
+        x = np.asarray(self.x)
+        y = np.asarray(self.y)
+        z = np.asarray(self.z)
+
+        nelv, nz, ny, nx = x.shape
+        if nz != 1:
+            raise ValueError(f"Expected nz=1 for 2D; got nz={nz}")
+
+        x2 = x[:, 0, :, :]
+        y2 = y[:, 0, :, :]
+        z2 = z[:, 0, :, :]
+
+        points = np.column_stack([
+            x2.ravel(order="C"),
+            y2.ravel(order="C"),
+            z2.ravel(order="C"),
+        ])
+
+        def idx(e: int, j: int, i: int) -> int:
+            return ((e * ny + j) * nx + i)
+
+        cells: List[int] = []
+        cell_types: List[int] = []
+
+        for e in range(nelv):
+            for j in range(ny - 1):
+                for i in range(nx - 1):
+                    n0 = idx(e, j, i)
+                    n1 = idx(e, j, i + 1)
+                    n2 = idx(e, j + 1, i + 1)
+                    n3 = idx(e, j + 1, i)
+                    cells.extend([4, n0, n1, n2, n3])
+                    cell_types.append(pv.CellType.QUAD)
+
+        if not cells:
+            raise RuntimeError("UnstructuredGrid has no cells – check mesh dimensions.")
+
+        grid = pv.UnstructuredGrid(
+            np.asarray(cells, dtype=np.int64),
+            np.asarray(cell_types, dtype=np.uint8),
+            points,
+        )
+        self._pv_grid = grid
+        self._pv_dims = (nelv, nz, ny, nx)
+        return grid
+
+    def update_pyvista_point_data(self, **arrays: np.ndarray) -> None:
+        """
+        Update cached PyVista grid point_data arrays (rank-local).
+
+        Each array must match SEM point layout and is raveled with order="C".
+        """
+        grid = self.build_pyvista_grid_2d()
+        for name, arr in arrays.items():
+            if arr is None:
+                continue
+            grid.point_data[name] = np.asarray(arr).ravel(order="C")
+
+    def extract_flame_front(
+        self,
+        *,
+        c_level: float,
+        scalar_name: str,
+        include_point_data: bool = True,
+    ) -> pd.DataFrame:
+        """
+        Contour the cached grid on scalar_name at c_level (rank-local).
+
+        In MPI, many ranks do not intersect the iso-surface. In that case, an empty DataFrame is returned.
+        """
+        grid = self.build_pyvista_grid_2d()
+        if scalar_name not in grid.point_data:
+            raise ValueError(
+                f"{scalar_name!r} not found in grid point_data. "
+                f"Call update_pyvista_point_data({scalar_name}=...) first."
+            )
+
+        Tmin, Tmax = grid.get_data_range(scalar_name)
+        if not (Tmin <= c_level <= Tmax):
+            return pd.DataFrame({"x": [], "y": [], "z": []})
+
+        iso = grid.contour(scalars=scalar_name, isosurfaces=[float(c_level)])
+        pts = iso.points
+
+        out: Dict[str, Any] = {"x": pts[:, 0], "y": pts[:, 1], "z": pts[:, 2]}
+        if include_point_data:
+            for name, arr in iso.point_data.items():
+                out[name] = np.asarray(arr)
+        return pd.DataFrame(out)
+
+    # ==================================================================================
+    # Reaction rates (single public SEM API)
+    # ==================================================================================
+
+    def _reaction_rates_core_flat(
+        self,
+        *,
+        cantera_file: str,
+        T_nd_flat: np.ndarray,                # (N,) nondimensional T=T/T_ref
+        Y_full_flat: np.ndarray,              # (N, n_species_mech) mass fractions (full mechanism)
+        t_ref: float,
+        p_ref: float,
+    ) -> Dict[str, np.ndarray]:
+        """
+        Internal core: Cantera loop on flattened arrays.
+
+        Returns flat arrays:
+          omega_<species>          (N,) [kg/m^3/s]
+          heat_conductivity        (N,) [W/m/K]
+          thermal_diffusivity      (N,) [cm^2/s]
+        """
+        gas = ct.Solution(cantera_file)
+        n_points = int(T_nd_flat.size)
+        n_species = gas.n_species
+        MW = gas.molecular_weights  # kg/kmol
+
+        omega_mass = np.zeros((n_points, n_species), dtype=float)
+        heat_cond = np.zeros(n_points, dtype=float)
+        thermal_diff = np.zeros(n_points, dtype=float)
+
+        T_K = T_nd_flat * float(t_ref)
+        P = float(p_ref)
+
+        # A small safety normalisation (optional)
+        Y = np.asarray(Y_full_flat, dtype=float)
+        Y = np.clip(Y, 0.0, None)
+        row_sum = np.sum(Y, axis=1)
+        # Avoid divide-by-zero; if sum==0 keep as-is (Cantera may error; that's a data issue)
+        mask = row_sum > 0.0
+        Y[mask] = (Y[mask].T / row_sum[mask]).T
+
+        for i in range(n_points):
+            gas.TPY = float(T_K[i]), P, Y[i, :]
+            omega_mass[i, :] = gas.net_production_rates * MW  # kmol/m3/s -> kg/m3/s
+            heat_cond[i] = gas.thermal_conductivity
+            if gas.density > 0 and gas.cp_mass > 0:
+                alpha_m2_s = heat_cond[i] / (gas.density * gas.cp_mass)
+            else:
+                alpha_m2_s = np.nan
+            thermal_diff[i] = alpha_m2_s * 1.0e4  # m^2/s -> cm^2/s
+
+        out: Dict[str, np.ndarray] = {}
+        for k, sp in enumerate(gas.species_names):
+            out[f"omega_{sp}"] = omega_mass[:, k]
+        out["heat_conductivity"] = heat_cond
+        out["thermal_diffusivity"] = thermal_diff
+        return out
+
+    def compute_reaction_rates(
+        self,
+        *,
+        cantera_file: str,
+        species_list: List[str],
+        t_ref: float,
+        p_ref: float,
+        phi_loc_from: Tuple[str, str] = ("H2", "O2"),
+        F_O_stoich: float = (0.02851163 / 0.2262686),
+    ) -> Dict[str, np.ndarray]:
+        """
+        Compute Cantera net production rates (mass basis) and some transport properties.
+
+        Parameters
+        ----------
+        species_list:
+            Names of scalar fields in the Nek output holding **mass fractions**.
+            These are mapped into the full Cantera mechanism vector. Species not listed are set to 0.
+
+        Returns
+        -------
+        dict of SEM-shaped arrays (rank-local):
+          omega_<species> for all mechanism species, heat_conductivity, thermal_diffusivity, and phi_loc.
+        """
+        gas = ct.Solution(cantera_file)
+        mech_index = {name: i for i, name in enumerate(gas.species_names)}
+
+        # Flatten T
+        T_nd = np.asarray(self.t)
+        T_nd_flat = T_nd.ravel(order="C")
+        n_points = int(T_nd_flat.size)
+
+        # Build full Y for mechanism
+        Y_full = np.zeros((n_points, gas.n_species), dtype=float)
+
+        for sp in species_list:
+            if sp not in mech_index:
+                raise KeyError(f"Species {sp!r} not found in Cantera mechanism.")
+            y_sp = np.asarray(self.get_scalar(sp)).ravel(order="C")
+            if y_sp.size != n_points:
+                raise ValueError(f"Mass fraction field {sp!r} has wrong size (got {y_sp.size}, expected {n_points}).")
+            Y_full[:, mech_index[sp]] = y_sp
+
+        out_flat = self._reaction_rates_core_flat(
+            cantera_file=cantera_file,
+            T_nd_flat=T_nd_flat,
+            Y_full_flat=Y_full,
+            t_ref=float(t_ref),
+            p_ref=float(p_ref),
+        )
+
+        # phi_loc (optional proxy, based on mass fraction ratio)
+        a, b = phi_loc_from
+        if a in species_list and b in species_list:
+            Ya = np.asarray(self.get_scalar(a)).ravel(order="C")
+            Yb = np.asarray(self.get_scalar(b)).ravel(order="C")
+            phi_loc = (Ya / np.maximum(Yb, 1e-30)) / float(F_O_stoich)
+        else:
+            phi_loc = np.full(n_points, np.nan, dtype=float)
+        out_flat["phi_loc"] = phi_loc
+
+        # Reshape to SEM partition shape
+        out_sem: Dict[str, np.ndarray] = {}
+        for k, v in out_flat.items():
+            out_sem[k] = np.asarray(v).reshape(T_nd.shape, order="C")
+        return out_sem
+
+    # ==================================================================================
+    # One shared feature builder (used by both full-field export and isocontours)
+    # ==================================================================================
+
+    def build_point_data_dict(
+        self,
+        *,
+        cantera_inputs: Optional[List[Any]] = None,  # [cantera_file, species_list, t_ref, p_ref]
+        phi: Optional[float] = None,
+        # include as subset of all fields
+        scalar_subset: Optional[List[str]] = None,
+        # derived
+        compute_progress_var: bool = True,
+        compute_vel_jacobian: bool = False,
+        compute_vel_hessian: bool = False,
+        compute_T_grad: bool = False,
+        compute_curv_grad: bool = False,
+        compute_local_vel_jacobian: bool = False,
+        compute_reaction_rates: bool = False,
+        # progress
+        progress_fuel: str = "H2",
+        progress_oxidizer: str = "O2:0.21, N2:0.79",
+        progress_loglevel: int = 0,
+        # reaction rates
+        reaction_species_list: Optional[List[str]] = None,
+    ) -> Dict[str, np.ndarray]:
+        """
+        Build a dict of SEM-shaped arrays to attach as PyVista point_data, or to flatten into a DataFrame.
+
+        This is the **single place** controlling feature availability.
+        """
+        point_data: Dict[str, np.ndarray] = {}
+
+        # Base fields
+        
+        point_data["u"] = np.asarray(self.u)
+        point_data["v"] = np.asarray(self.v)
+        point_data["T"] = np.asarray(self.t)
+        point_data["p"] = np.asarray(self.p)
+        
+        #Scalars
+        if scalar_subset:
+            for name in scalar_subset:
+                point_data[name] = np.asarray(self.get_scalar(name))
+        else:
+            n = min(len(self.scalar_names), len(self.scalars))
+            for i in range(n):
+                point_data[self.scalar_names[i]] = np.asarray(self.scalars[i])
 
 
-extract_full_field_hdf5 = extract_full_field_csv
+        # Progress variable
+        if compute_progress_var:
+            if cantera_inputs is None or len(cantera_inputs) < 4:
+                raise ValueError("cantera_inputs must include [cantera_file, species_list, t_ref, p_ref]")
+            if phi is None:
+                raise ValueError("phi must be provided when compute_progress_var=True")
+            cantera_file = str(cantera_inputs[0])
+            t_ref = float(cantera_inputs[2])
+            p_ref = float(cantera_inputs[3])
+            point_data["progress_var"] = self.compute_progress_var_array(
+                cantera_file=cantera_file,
+                phi=float(phi),
+                t_ref=t_ref,
+                p_ref=p_ref,
+                fuel=progress_fuel,
+                oxidizer=progress_oxidizer,
+                loglevel=progress_loglevel,
+            )
+
+        # Derivatives / Jacobians
+        if compute_T_grad:
+            dTdx, dTdy = self.grad2d_sem(np.asarray(self.t))
+            point_data["dTdx"] = dTdx
+            point_data["dTdy"] = dTdy
+
+        if compute_vel_jacobian:
+            dudx, dudy = self.grad2d_sem(np.asarray(self.u))
+            dvdx, dvdy = self.grad2d_sem(np.asarray(self.v))
+            point_data["dudx"] = dudx
+            point_data["dudy"] = dudy
+            point_data["dvdx"] = dvdx
+            point_data["dvdy"] = dvdy
+
+        if compute_vel_hessian:
+            d2u_xx, d2u_xy, d2u_yy = self.hess2d_sem(np.asarray(self.u))
+            d2v_xx, d2v_xy, d2v_yy = self.hess2d_sem(np.asarray(self.v))
+            point_data["d2u_xx"] = d2u_xx
+            point_data["d2u_xy"] = d2u_xy
+            point_data["d2u_yy"] = d2u_yy
+            point_data["d2v_xx"] = d2v_xx
+            point_data["d2v_xy"] = d2v_xy
+            point_data["d2v_yy"] = d2v_yy
+
+        if compute_curv_grad:
+            curv = self.get_scalar("curvature")
+            dcdx, dcdy = self.grad2d_sem(np.asarray(curv))
+            point_data["curvature"] = np.asarray(curv)
+            point_data["dcurvdx"] = dcdx
+            point_data["dcurvdy"] = dcdy
+
+        if compute_local_vel_jacobian:
+            u_n = self.get_scalar("u_n")
+            u_t = self.get_scalar("u_t")
+            dun_dx, dun_dy = self.grad2d_sem(np.asarray(u_n))
+            dut_dx, dut_dy = self.grad2d_sem(np.asarray(u_t))
+            point_data["u_n"] = np.asarray(u_n)
+            point_data["u_t"] = np.asarray(u_t)
+            point_data["du_ndx"] = dun_dx
+            point_data["du_ndy"] = dun_dy
+            point_data["du_tdx"] = dut_dx
+            point_data["du_tdy"] = dut_dy
+
+        # Reaction rates
+        if compute_reaction_rates:
+            if cantera_inputs is None or len(cantera_inputs) < 4:
+                raise ValueError("cantera_inputs must include [cantera_file, species_list, t_ref, p_ref]")
+            cantera_file = str(cantera_inputs[0])
+            t_ref = float(cantera_inputs[2])
+            p_ref = float(cantera_inputs[3])
+
+            # choose species list for Y
+            # Hardcoded
+            species_list = ["H2", "O2", "H2O","H","O","OH","HO2","H2O2","N2"]  # Ddefault
+
+            rr = self.compute_reaction_rates(
+                cantera_file=cantera_file,
+                species_list=species_list,
+                t_ref=t_ref,
+                p_ref=p_ref,
+            )
+            point_data.update(rr)
+
+        return point_data
+# ======================================================================================
