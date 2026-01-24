@@ -121,7 +121,7 @@ def main() -> None:
         out_hdf_path = field_path(out_case)
 
         # Local read
-        ds.reload_timestep(case.time_step)
+        ds.reload_timestep(case.time_step, subdomain=True)
 
         scalar_subset = None
 

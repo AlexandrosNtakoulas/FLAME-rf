@@ -188,18 +188,21 @@ class SEMDataset:
         self._pv_grid: Optional[pv.UnstructuredGrid] = None
         self._pv_dims: Optional[Tuple[int, int, int, int]] = None  # (nelv,nz,ny,nx)
 
-        # Load initial timestep
-        self.reload_timestep(self.time_step)
-
     # ----------------------------------------------------------------------------------
     # I/O per timestep
     # ----------------------------------------------------------------------------------
-
-    def reload_timestep(self, time_step: int) -> None:
+    # Utils
+    from pysemtools.datatypes.utils import write_fld_subdomain_from_list    
+    def reload_timestep(self, time_step: int, subdomain: bool) -> None:
         self.time_step = int(time_step)
         fname = self.folder / f"{self.file_name}0.f{self.time_step:05d}"
         pynekread(str(fname), self.comm, fld=self.fld, overwrite_fld=True)
-
+        
+        if subdomain is True:
+            # Write the data in a subdomain and with a different order than what was read
+            fout = 'subdomains0.f00001'
+            self.write_fld_subdomain_from_list(fout, self.comm, self.msh, field_list=[self.fld.registry['u'],self.fld.registry['v'],self.fld.registry['w']], subdomain=[[-1, 1], [-1, 1], [0, 0.5]])
+        
         vel = self.fld.fields.get("vel", None)
         if vel is None:
             raise KeyError("Velocity field 'vel' not found in file.")
