@@ -227,6 +227,26 @@ class SEMDataset:
         d2yy = self.coef.dudxyz(dfdy, self.coef.drdy, self.coef.dsdy)
         return d2xx, d2xy, d2yy
 
+    def grad_sem(self, f: np.ndarray) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
+        if self.coef.gdim > 2 and f.shape[1] > 1:
+            dfdx = self.coef.dudxyz(f, self.coef.drdx, self.coef.dsdx, self.coef.dtdx)
+            dfdy = self.coef.dudxyz(f, self.coef.drdy, self.coef.dsdy, self.coef.dtdy)
+            dfdz = self.coef.dudxyz(f, self.coef.drdz, self.coef.dsdz, self.coef.dtdz)
+            return dfdx, dfdy, dfdz
+        dfdx, dfdy = self.grad2d_sem(f)
+        return dfdx, dfdy, None
+
+    def hess_sem(
+        self, f: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray], np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]:
+        dfdx, dfdy, dfdz = self.grad_sem(f)
+        d2xx, d2xy, d2xz = self.grad_sem(dfdx)
+        _, d2yy, d2yz = self.grad_sem(dfdy)
+        d2zz = None
+        if dfdz is not None:
+            _, _, d2zz = self.grad_sem(dfdz)
+        return d2xx, d2xy, d2xz, d2yy, d2yz, d2zz
+
     # ----------------------------------------------------------------------------------
     # Scalars
     # ----------------------------------------------------------------------------------
@@ -595,46 +615,70 @@ class SEMDataset:
 
         # Derivatives / Jacobians
         if compute_T_grad:
-            dTdx, dTdy = self.grad2d_sem(np.asarray(self.t))
+            dTdx, dTdy, dTdz = self.grad_sem(np.asarray(self.t))
             point_data["dTdx"] = dTdx
             point_data["dTdy"] = dTdy
+            if dTdz is not None:
+                point_data["dTdz"] = dTdz
 
         if compute_vel_jacobian:
-            dudx, dudy = self.grad2d_sem(np.asarray(self.u))
-            dvdx, dvdy = self.grad2d_sem(np.asarray(self.v))
+            dudx, dudy, dudz = self.grad_sem(np.asarray(self.u))
+            dvdx, dvdy, dvdz = self.grad_sem(np.asarray(self.v))
             point_data["dudx"] = dudx
             point_data["dudy"] = dudy
             point_data["dvdx"] = dvdx
             point_data["dvdy"] = dvdy
+            if dudz is not None:
+                point_data["dudz"] = dudz
+            if dvdz is not None:
+                point_data["dvdz"] = dvdz
 
         if compute_vel_hessian:
-            d2u_xx, d2u_xy, d2u_yy = self.hess2d_sem(np.asarray(self.u))
-            d2v_xx, d2v_xy, d2v_yy = self.hess2d_sem(np.asarray(self.v))
+            d2u_xx, d2u_xy, d2u_xz, d2u_yy, d2u_yz, d2u_zz = self.hess_sem(np.asarray(self.u))
+            d2v_xx, d2v_xy, d2v_xz, d2v_yy, d2v_yz, d2v_zz = self.hess_sem(np.asarray(self.v))
             point_data["d2u_xx"] = d2u_xx
             point_data["d2u_xy"] = d2u_xy
             point_data["d2u_yy"] = d2u_yy
             point_data["d2v_xx"] = d2v_xx
             point_data["d2v_xy"] = d2v_xy
             point_data["d2v_yy"] = d2v_yy
+            if d2u_xz is not None:
+                point_data["d2u_xz"] = d2u_xz
+            if d2u_yz is not None:
+                point_data["d2u_yz"] = d2u_yz
+            if d2u_zz is not None:
+                point_data["d2u_zz"] = d2u_zz
+            if d2v_xz is not None:
+                point_data["d2v_xz"] = d2v_xz
+            if d2v_yz is not None:
+                point_data["d2v_yz"] = d2v_yz
+            if d2v_zz is not None:
+                point_data["d2v_zz"] = d2v_zz
 
         if compute_curv_grad:
             curv = self.get_scalar("curvature")
-            dcdx, dcdy = self.grad2d_sem(np.asarray(curv))
+            dcdx, dcdy, dcdz = self.grad_sem(np.asarray(curv))
             point_data["curvature"] = np.asarray(curv)
             point_data["dcurvdx"] = dcdx
             point_data["dcurvdy"] = dcdy
+            if dcdz is not None:
+                point_data["dcurvdz"] = dcdz
 
         if compute_local_vel_jacobian:
             u_n = self.get_scalar("u_n")
             u_t = self.get_scalar("u_t")
-            dun_dx, dun_dy = self.grad2d_sem(np.asarray(u_n))
-            dut_dx, dut_dy = self.grad2d_sem(np.asarray(u_t))
+            dun_dx, dun_dy, dun_dz = self.grad_sem(np.asarray(u_n))
+            dut_dx, dut_dy, dut_dz = self.grad_sem(np.asarray(u_t))
             point_data["u_n"] = np.asarray(u_n)
             point_data["u_t"] = np.asarray(u_t)
             point_data["du_ndx"] = dun_dx
             point_data["du_ndy"] = dun_dy
             point_data["du_tdx"] = dut_dx
             point_data["du_tdy"] = dut_dy
+            if dun_dz is not None:
+                point_data["du_ndz"] = dun_dz
+            if dut_dz is not None:
+                point_data["du_tdz"] = dut_dz
 
         # Reaction rates
         if compute_reaction_rates:

@@ -38,7 +38,7 @@ HDF_FORMAT: "fixed"
 COMP_VEL_JACOBIAN:       false
 COMP_VEL_HESSIAN:        false
 COMP_REACTION_RATES:     false
-COMP_T_GRAD:             false
+COMP_T_GRAD:             True
 COMP_CURV_GRAD:          false
 COMP_LOCAL_VEL_JACOBIAN: false
 
