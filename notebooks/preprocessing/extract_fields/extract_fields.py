@@ -260,6 +260,43 @@ def main() -> None:
                 f"z=[{z_min}, {z_max}]"
             )
 
+        # Global bounds after cropping (if enabled)
+        if subdomain:
+            if elem_idx is not None and elem_idx.size > 0:
+                x_sub = x_local[elem_idx, ...]
+                y_sub = y_local[elem_idx, ...]
+                z_sub = z_local[elem_idx, ...]
+                x_c_min_l = float(np.min(x_sub))
+                x_c_max_l = float(np.max(x_sub))
+                y_c_min_l = float(np.min(y_sub))
+                y_c_max_l = float(np.max(y_sub))
+                z_c_min_l = float(np.min(z_sub))
+                z_c_max_l = float(np.max(z_sub))
+            else:
+                x_c_min_l = np.inf
+                y_c_min_l = np.inf
+                z_c_min_l = np.inf
+                x_c_max_l = -np.inf
+                y_c_max_l = -np.inf
+                z_c_max_l = -np.inf
+
+            x_c_min = comm.allreduce(x_c_min_l, op=MPI.MIN)
+            y_c_min = comm.allreduce(y_c_min_l, op=MPI.MIN)
+            z_c_min = comm.allreduce(z_c_min_l, op=MPI.MIN)
+            x_c_max = comm.allreduce(x_c_max_l, op=MPI.MAX)
+            y_c_max = comm.allreduce(y_c_max_l, op=MPI.MAX)
+            z_c_max = comm.allreduce(z_c_max_l, op=MPI.MAX)
+            if rank == 0:
+                if np.isinf(x_c_min) or np.isinf(x_c_max):
+                    print("[rank0] Cropped bounds: no elements selected")
+                else:
+                    print(
+                        f"[rank0] Cropped bounds: "
+                        f"x=[{x_c_min}, {x_c_max}] "
+                        f"y=[{y_c_min}, {y_c_max}] "
+                        f"z=[{z_c_min}, {z_c_max}]"
+                    )
+
         # Build augmented Nek field (cropped by elements if requested)
         derived_keys = []
         base_field_names = {"u", "v", "T", "p"}
