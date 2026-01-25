@@ -236,6 +236,29 @@ def main() -> None:
             global_keep = comm.allreduce(local_keep, op=MPI.SUM)
             if rank == 0:
                 print(f"[rank0] Cropping elements: kept {global_keep}/{global_total}")
+        else:
+            local_total = int(ds.msh.nelv)
+            global_total = comm.allreduce(local_total, op=MPI.SUM)
+            if rank == 0:
+                print(f"[rank0] Cropping elements: kept {global_total}/{global_total}")
+
+        # Global bounds (before cropping)
+        x_local = np.asarray(ds.msh.x)
+        y_local = np.asarray(ds.msh.y)
+        z_local = np.asarray(ds.msh.z)
+        x_min = comm.allreduce(float(np.min(x_local)), op=MPI.MIN)
+        x_max = comm.allreduce(float(np.max(x_local)), op=MPI.MAX)
+        y_min = comm.allreduce(float(np.min(y_local)), op=MPI.MIN)
+        y_max = comm.allreduce(float(np.max(y_local)), op=MPI.MAX)
+        z_min = comm.allreduce(float(np.min(z_local)), op=MPI.MIN)
+        z_max = comm.allreduce(float(np.max(z_local)), op=MPI.MAX)
+        if rank == 0:
+            print(
+                f"[rank0] Global bounds: "
+                f"x=[{x_min}, {x_max}] "
+                f"y=[{y_min}, {y_max}] "
+                f"z=[{z_min}, {z_max}]"
+            )
 
         # Build augmented Nek field (cropped by elements if requested)
         derived_keys = []
@@ -274,17 +297,6 @@ def main() -> None:
 
             fld_sub.t = ds.fld.t
             fld_sub.update_vars()
-
-            if write_comm.rank == 0:
-                x_min, x_max = float(np.min(x_sub)), float(np.max(x_sub))
-                y_min, y_max = float(np.min(y_sub)), float(np.max(y_sub))
-                z_min, z_max = float(np.min(z_sub)), float(np.max(z_sub))
-                print(
-                    f"[rank0] Cropped bounds: "
-                    f"x=[{x_min}, {x_max}] "
-                    f"y=[{y_min}, {y_max}] "
-                    f"z=[{z_min}, {z_max}]"
-                )
 
             pynekwrite(str(out_fld_path), write_comm, msh=msh_sub, fld=fld_sub, istep=ts, write_mesh=write_mesh)
 
