@@ -1,6 +1,5 @@
 # Single time step (used if MULTI_TIME_STEP is false)
 TIME_STEP: 1
-
 # Enable multi-time-step extraction
 MULTI_TIME_STEP: True
 # Start time step for multi extraction (inclusive)
@@ -16,6 +15,13 @@ LAT_SIZE: "025"
 T_REF: 300
 # Reference pressure
 P_REF: 1.0e05
+
+# Keep Subdomain
+KEEP_SUBDOMAIN: True
+X_LIMITS: (300, None) # min/max domain limits
+Y_LIMITS: (None, None)
+Z_LIMITS: (None, None)
+
 
 # Use post-processed data
 # When POST is true, input files are named "po_postPremix0.fxxxxx".
