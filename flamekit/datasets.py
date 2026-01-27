@@ -14,6 +14,7 @@ from pysemtools.datatypes.msh import Mesh
 from pysemtools.datatypes.coef import Coef
 from pysemtools.io.ppymech.neksuite import pynekread
 from pysemtools.datatypes.field import FieldRegistry
+from pysemtools.datatypes.msh_connectivity import MeshConnectivity
 
 if TYPE_CHECKING:
     from flamekit.io_fronts import Case
@@ -187,6 +188,18 @@ class SEMDataset:
         # PyVista grid cache
         self._pv_grid: Optional[pv.UnstructuredGrid] = None
         self._pv_dims: Optional[Tuple[int, int, int, int]] = None  # (nelv,nz,ny,nx)
+        self._msh_conn: Optional[MeshConnectivity] = None
+
+    def _get_msh_conn(self) -> MeshConnectivity:
+        if self._msh_conn is None:
+            comm = self.comm if self.comm is not None else MPI.COMM_WORLD
+            self._msh_conn = MeshConnectivity(comm, self.msh, rel_tol=1e-5)
+        return self._msh_conn
+
+    def _dssum_field(self, field: Optional[np.ndarray]) -> Optional[np.ndarray]:
+        if field is None:
+            return None
+        return self._get_msh_conn().dssum(field=field, msh=self.msh, average="multiplicity")
 
     # ----------------------------------------------------------------------------------
     # I/O per timestep
@@ -616,26 +629,38 @@ class SEMDataset:
         # Derivatives / Jacobians
         if compute_T_grad:
             dTdx, dTdy, dTdz = self.grad_sem(np.asarray(self.t))
+            dTdx = self._dssum_field(dTdx)
+            dTdy = self._dssum_field(dTdy)
             point_data["dTdx"] = dTdx
             point_data["dTdy"] = dTdy
             if dTdz is not None:
-                point_data["dTdz"] = dTdz
+                point_data["dTdz"] = self._dssum_field(dTdz)
 
         if compute_vel_jacobian:
             dudx, dudy, dudz = self.grad_sem(np.asarray(self.u))
             dvdx, dvdy, dvdz = self.grad_sem(np.asarray(self.v))
+            dudx = self._dssum_field(dudx)
+            dudy = self._dssum_field(dudy)
+            dvdx = self._dssum_field(dvdx)
+            dvdy = self._dssum_field(dvdy)
             point_data["dudx"] = dudx
             point_data["dudy"] = dudy
             point_data["dvdx"] = dvdx
             point_data["dvdy"] = dvdy
             if dudz is not None:
-                point_data["dudz"] = dudz
+                point_data["dudz"] = self._dssum_field(dudz)
             if dvdz is not None:
-                point_data["dvdz"] = dvdz
+                point_data["dvdz"] = self._dssum_field(dvdz)
 
         if compute_vel_hessian:
             d2u_xx, d2u_xy, d2u_xz, d2u_yy, d2u_yz, d2u_zz = self.hess_sem(np.asarray(self.u))
             d2v_xx, d2v_xy, d2v_xz, d2v_yy, d2v_yz, d2v_zz = self.hess_sem(np.asarray(self.v))
+            d2u_xx = self._dssum_field(d2u_xx)
+            d2u_xy = self._dssum_field(d2u_xy)
+            d2u_yy = self._dssum_field(d2u_yy)
+            d2v_xx = self._dssum_field(d2v_xx)
+            d2v_xy = self._dssum_field(d2v_xy)
+            d2v_yy = self._dssum_field(d2v_yy)
             point_data["d2u_xx"] = d2u_xx
             point_data["d2u_xy"] = d2u_xy
             point_data["d2u_yy"] = d2u_yy
@@ -643,26 +668,28 @@ class SEMDataset:
             point_data["d2v_xy"] = d2v_xy
             point_data["d2v_yy"] = d2v_yy
             if d2u_xz is not None:
-                point_data["d2u_xz"] = d2u_xz
+                point_data["d2u_xz"] = self._dssum_field(d2u_xz)
             if d2u_yz is not None:
-                point_data["d2u_yz"] = d2u_yz
+                point_data["d2u_yz"] = self._dssum_field(d2u_yz)
             if d2u_zz is not None:
-                point_data["d2u_zz"] = d2u_zz
+                point_data["d2u_zz"] = self._dssum_field(d2u_zz)
             if d2v_xz is not None:
-                point_data["d2v_xz"] = d2v_xz
+                point_data["d2v_xz"] = self._dssum_field(d2v_xz)
             if d2v_yz is not None:
-                point_data["d2v_yz"] = d2v_yz
+                point_data["d2v_yz"] = self._dssum_field(d2v_yz)
             if d2v_zz is not None:
-                point_data["d2v_zz"] = d2v_zz
+                point_data["d2v_zz"] = self._dssum_field(d2v_zz)
 
         if compute_curv_grad:
             curv = self.get_scalar("curvature")
             dcdx, dcdy, dcdz = self.grad_sem(np.asarray(curv))
             point_data["curvature"] = np.asarray(curv)
+            dcdx = self._dssum_field(dcdx)
+            dcdy = self._dssum_field(dcdy)
             point_data["dcurvdx"] = dcdx
             point_data["dcurvdy"] = dcdy
             if dcdz is not None:
-                point_data["dcurvdz"] = dcdz
+                point_data["dcurvdz"] = self._dssum_field(dcdz)
 
         if compute_local_vel_jacobian:
             u_n = self.get_scalar("u_n")
@@ -671,14 +698,18 @@ class SEMDataset:
             dut_dx, dut_dy, dut_dz = self.grad_sem(np.asarray(u_t))
             point_data["u_n"] = np.asarray(u_n)
             point_data["u_t"] = np.asarray(u_t)
+            dun_dx = self._dssum_field(dun_dx)
+            dun_dy = self._dssum_field(dun_dy)
+            dut_dx = self._dssum_field(dut_dx)
+            dut_dy = self._dssum_field(dut_dy)
             point_data["du_ndx"] = dun_dx
             point_data["du_ndy"] = dun_dy
             point_data["du_tdx"] = dut_dx
             point_data["du_tdy"] = dut_dy
             if dun_dz is not None:
-                point_data["du_ndz"] = dun_dz
+                point_data["du_ndz"] = self._dssum_field(dun_dz)
             if dut_dz is not None:
-                point_data["du_tdz"] = dut_dz
+                point_data["du_tdz"] = self._dssum_field(dut_dz)
 
         # Reaction rates
         if compute_reaction_rates:

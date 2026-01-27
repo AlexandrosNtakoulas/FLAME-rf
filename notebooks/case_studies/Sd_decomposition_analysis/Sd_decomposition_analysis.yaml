@@ -54,7 +54,7 @@ OUT_BASE_DIR: "report_figures/case_studies/Sd_decomposition_analysis"
 
 # Plot styling (optional)
 PLOT_FONT_FAMILY: "CMU Serif"
-PLOT_FONT_SIZE: 20
+PLOT_FONT_SIZE: 25
 FIG_DPI: 250
 FIG_SIZE:
   - 6.8
