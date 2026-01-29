@@ -43,9 +43,6 @@ from pysemtools.interpolation.interpolator import (
     get_bbox_from_coordinates,
     get_bbox_centroids_and_max_dist,
 )
-import pysemtools, sys
-print("pysemtools file:", pysemtools.__file__)
-print("sys.path[0:5]:", sys.path[:5])
 
 
 def _find_project_root(start: Path) -> Path:

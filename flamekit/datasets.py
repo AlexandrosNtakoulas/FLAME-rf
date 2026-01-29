@@ -199,7 +199,7 @@ class SEMDataset:
     def _get_msh_conn(self) -> MeshConnectivity:
         if self._msh_conn is None:
             comm = self.comm if self.comm is not None else MPI.COMM_WORLD
-            self._msh_conn = MeshConnectivity(comm, self.msh, rel_tol=1e-5)
+            self._msh_conn = MeshConnectivity(comm, self.msh, rel_tol=1e-5, use_hashtable=True)
         return self._msh_conn
 
     def _dssum_field(self, field: Optional[np.ndarray]) -> Optional[np.ndarray]:
