@@ -65,7 +65,7 @@ The goal of this work is to establish a reproducible computational pipeline that
 │   │   └── ...
 │   └── Archive/
 │
-├── flamekit/
+├── FLAME/
 │   ├── chemical_mech/
 │   ├── datasets.py
 │   ├── io_fields.py

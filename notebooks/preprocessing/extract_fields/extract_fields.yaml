@@ -81,4 +81,4 @@ SCALARS:
   # - "vorticity"
 
 # Cantera mechanism YAML (relative to project root)
-CANTERA_YAML: "flamekit/chemical_mech/BurkeH2.yaml"
+CANTERA_YAML: "FLAME/chemical_mech/BurkeH2.yaml"

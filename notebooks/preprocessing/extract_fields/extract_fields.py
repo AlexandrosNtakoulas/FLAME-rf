@@ -1,6 +1,6 @@
 """Extract full-field data from Nek5000 .f* files and write to HDF5.
 
-This script is compatible with the **newest** flamekit.datasets.py API (SEMDataset +
+This script is compatible with the **newest** FLAME.datasets.py API (SEMDataset +
 extract_full_field_hdf5 in datasets_complete.py / your updated datasets.py).
 
 Key behavior:
@@ -31,9 +31,9 @@ from typing import List, Iterable, Tuple
 import yaml
 from mpi4py import MPI
 
-from flamekit.io_fronts import Case, folder
-from flamekit.io_fields import make_case_with_base_dir, field_path
-from flamekit.datasets import SEMDataset
+from FLAME.io_fronts import Case, folder
+from FLAME.io_fields import make_case_with_base_dir, field_path
+from FLAME.datasets import SEMDataset
 import pandas as pd
 import numpy as np
 from pysemtools.datatypes.msh import Mesh

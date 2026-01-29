@@ -31,13 +31,15 @@ POST: true
 COMP_VEL_JACOBIAN: true
 COMP_VEL_HESSIAN: false
 COMP_REACTION_RATES: true
-COMP_TRANSPORT: null  # optional: only transport (heat_conductivity, thermal_diffusivity)
+COMP_TRANSPORT: true  # (heat_conductivity, thermal_diffusivity)
 COMP_T_GRAD: true
 COMP_CURV_GRAD: true
 COMP_LOCAL_VEL_JACOBIAN: true
+# Apply dssum (continuity) to derivative fields
+COMP_DSSUM_DERIVS: true
 
 # Cantera mechanism YAML (relative to project root)
-CANTERA_YAML: "flamekit/chemical_mech/BurkeH2.yaml"
+CANTERA_YAML: "FLAME/chemical_mech/BurkeH2.yaml"
 
 # Progress variable isolevels (0-1)
 PROGRESS_LEVELS:

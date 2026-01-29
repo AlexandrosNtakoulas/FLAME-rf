@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 from mpi4py import MPI
 
-from flamekit.datasets import SEMDataset
-from flamekit.io_fronts import Case, folder, front_path
-from flamekit.io_fields import make_case_with_base_dir
+from FLAME.datasets import SEMDataset
+from FLAME.io_fronts import Case, folder, front_path
+from FLAME.io_fields import make_case_with_base_dir
 
 
 # -----------------------------
@@ -23,9 +23,6 @@ size = comm.size
 
 if rank == 0:
     print(f"MPI world size: {size}")
-    if size == 1:
-        print("MPI world size is 1. Launch with: mpirun -n N python ... to use multiple processes.")
-
 
 # -----------------------------
 # Config
@@ -69,6 +66,9 @@ COMP_REACTION_RATES = bool(CFG["COMP_REACTION_RATES"])
 COMP_TRANSPORT = CFG.get("COMP_TRANSPORT", None)
 if COMP_TRANSPORT is not None:
     COMP_TRANSPORT = bool(COMP_TRANSPORT)
+COMP_DSSUM_DERIVS = bool(CFG.get("COMP_DSSUM_DERIVS", True))
+COMP_VEL_JACOBIAN = bool(CFG.get("COMP_VEL_JACOBIAN", False))
+COMP_VEL_HESSIAN = bool(CFG.get("COMP_VEL_HESSIAN", False))
 
 T_REF = float(CFG["T_REF"])
 P_REF = float(CFG["P_REF"])
@@ -127,11 +127,14 @@ def process_isocontours(
             cantera_inputs=CANTERA_INPUTS,
             phi=PHI,
             compute_progress_var=True,
+            compute_vel_jacobian=COMP_VEL_JACOBIAN,
+            compute_vel_hessian=COMP_VEL_HESSIAN,
             compute_T_grad=COMP_T_GRAD,
             compute_curv_grad=COMP_CURV_GRAD,
             compute_local_vel_jacobian=COMP_LOCAL_VEL_JACOBIAN,
             compute_reaction_rates=COMP_REACTION_RATES,
             compute_transport=COMP_TRANSPORT,
+            dssum_derivatives=COMP_DSSUM_DERIVS,
         )
 
         # Attach arrays to cached grid for this timestep
