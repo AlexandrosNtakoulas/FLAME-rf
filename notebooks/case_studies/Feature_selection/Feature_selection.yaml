@@ -66,20 +66,34 @@ CURVATURE_BOUNDS:
   - -0.1
   - 0.1
 
-# Number of features per cluster
-K_SELECT_PER_CLUSTER: 4
 # Minimum samples per cluster
 MIN_CLUSTER_SAMPLES: 50
 # RNG seed
 RANDOM_STATE: 0
+# Train/test split for model evaluation
+TEST_SIZE: 0.25
+
+# Model parameters (RandomForestRegressor)
+MODEL_PARAMS:
+  n_estimators: 300
+  n_jobs: -1
 
 # Number of MI features to plot
 MI_TOPN_PLOT: 15
 # Top-K representatives to train RF per curvature cluster
 TOPK_REP_PRED: 4
+# JMI/CMIM selection sizes
+K_SELECT_GLOBAL: 4
+K_SELECT_PER_CLUSTER: 4
+
+# Backward selection sizes
+BACKWARD_N_FEATURES_GLOBAL: 4
+BACKWARD_N_FEATURES_CLUSTER: 4
+SFS_SCORING: "neg_root_mean_squared_error"
+SFS_CV_SPLITS: 5
 
 # Output base directory for figures (relative to project root)
-OUTPUT_BASE_DIR: "report_figures/case_studies/Feature_selection_mi_cluster_jmi_cmim"
+OUTPUT_BASE_DIR: "report_figures/case_studies/Feature_selection"
 # Figure DPI
 FIG_DPI: 300
 
