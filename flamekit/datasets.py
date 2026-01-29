@@ -199,7 +199,7 @@ class SEMDataset:
     def _get_msh_conn(self) -> MeshConnectivity:
         if self._msh_conn is None:
             comm = self.comm if self.comm is not None else MPI.COMM_WORLD
-            self._msh_conn = MeshConnectivity(comm, self.msh, rel_tol=1e-5, use_hashtable=True)
+            self._msh_conn = MeshConnectivity(comm, self.msh, rel_tol=1e-5, use_hashtable=True, max_elem_per_vertex= 32, max_elem_per_edge= 16, max_elem_per_face= 8)
         return self._msh_conn
 
     def _dssum_field(self, field: Optional[np.ndarray]) -> Optional[np.ndarray]:
@@ -450,11 +450,14 @@ class SEMDataset:
         Y_full_flat: np.ndarray,              # (N, n_species_mech) mass fractions (full mechanism)
         t_ref: float,
         p_ref: float,
+        compute_omega: bool = True,
+        compute_heat_conductivity: bool = True,
+        compute_thermal_diffusivity: bool = True,
     ) -> Dict[str, np.ndarray]:
         """
         Internal core: Cantera loop on flattened arrays.
 
-        Returns flat arrays:
+        Returns flat arrays (based on flags):
           omega_<species>          (N,) [kg/m^3/s]
           heat_conductivity        (N,) [W/m/K]
           thermal_diffusivity      (N,) [cm^2/s]
@@ -462,11 +465,12 @@ class SEMDataset:
         gas = ct.Solution(cantera_file)
         n_points = int(T_nd_flat.size)
         n_species = gas.n_species
-        MW = gas.molecular_weights  # kg/kmol
+        MW = gas.molecular_weights if compute_omega else None  # kg/kmol
 
-        omega_mass = np.zeros((n_points, n_species), dtype=float)
-        heat_cond = np.zeros(n_points, dtype=float)
-        thermal_diff = np.zeros(n_points, dtype=float)
+        omega_mass = np.zeros((n_points, n_species), dtype=float) if compute_omega else None
+        need_heat_cond = bool(compute_heat_conductivity or compute_thermal_diffusivity)
+        heat_cond = np.zeros(n_points, dtype=float) if need_heat_cond else None
+        thermal_diff = np.zeros(n_points, dtype=float) if compute_thermal_diffusivity else None
 
         T_K = T_nd_flat * float(t_ref)
         P = float(p_ref)
@@ -481,19 +485,25 @@ class SEMDataset:
 
         for i in range(n_points):
             gas.TPY = float(T_K[i]), P, Y[i, :]
-            omega_mass[i, :] = gas.net_production_rates * MW  # kmol/m3/s -> kg/m3/s
-            heat_cond[i] = gas.thermal_conductivity
-            if gas.density > 0 and gas.cp_mass > 0:
-                alpha_m2_s = heat_cond[i] / (gas.density * gas.cp_mass)
-            else:
-                alpha_m2_s = np.nan
-            thermal_diff[i] = alpha_m2_s * 1.0e4  # m^2/s -> cm^2/s
+            if compute_omega:
+                omega_mass[i, :] = gas.net_production_rates * MW  # kmol/m3/s -> kg/m3/s
+            if need_heat_cond:
+                heat_cond[i] = gas.thermal_conductivity
+            if compute_thermal_diffusivity:
+                if gas.density > 0 and gas.cp_mass > 0:
+                    alpha_m2_s = heat_cond[i] / (gas.density * gas.cp_mass)
+                else:
+                    alpha_m2_s = np.nan
+                thermal_diff[i] = alpha_m2_s * 1.0e4  # m^2/s -> cm^2/s
 
         out: Dict[str, np.ndarray] = {}
-        for k, sp in enumerate(gas.species_names):
-            out[f"omega_{sp}"] = omega_mass[:, k]
-        out["heat_conductivity"] = heat_cond
-        out["thermal_diffusivity"] = thermal_diff
+        if compute_omega:
+            for k, sp in enumerate(gas.species_names):
+                out[f"omega_{sp}"] = omega_mass[:, k]
+        if compute_heat_conductivity:
+            out["heat_conductivity"] = heat_cond
+        if compute_thermal_diffusivity:
+            out["thermal_diffusivity"] = thermal_diff
         return out
 
     def compute_reaction_rates(
@@ -505,9 +515,10 @@ class SEMDataset:
         p_ref: float,
         phi_loc_from: Tuple[str, str] = ("H2", "O2"),
         F_O_stoich: float = (0.02851163 / 0.2262686),
+        include_transport: bool = True,
     ) -> Dict[str, np.ndarray]:
         """
-        Compute Cantera net production rates (mass basis) and some transport properties.
+        Compute Cantera net production rates (mass basis) and optional transport properties.
 
         Parameters
         ----------
@@ -518,7 +529,8 @@ class SEMDataset:
         Returns
         -------
         dict of SEM-shaped arrays (rank-local):
-          omega_<species> for all mechanism species, heat_conductivity, thermal_diffusivity, and phi_loc.
+          omega_<species> for all mechanism species, plus optional heat_conductivity,
+          thermal_diffusivity, and phi_loc.
         """
         gas = ct.Solution(cantera_file)
         mech_index = {name: i for i, name in enumerate(gas.species_names)}
@@ -545,6 +557,9 @@ class SEMDataset:
             Y_full_flat=Y_full,
             t_ref=float(t_ref),
             p_ref=float(p_ref),
+            compute_omega=True,
+            compute_heat_conductivity=bool(include_transport),
+            compute_thermal_diffusivity=bool(include_transport),
         )
 
         # phi_loc (optional proxy, based on mass fraction ratio)
@@ -558,6 +573,58 @@ class SEMDataset:
         out_flat["phi_loc"] = phi_loc
 
         # Reshape to SEM partition shape
+        out_sem: Dict[str, np.ndarray] = {}
+        for k, v in out_flat.items():
+            out_sem[k] = np.asarray(v).reshape(T_nd.shape, order="C")
+        return out_sem
+
+    def compute_transport_properties(
+        self,
+        *,
+        cantera_file: str,
+        species_list: List[str],
+        t_ref: float,
+        p_ref: float,
+        include_heat_conductivity: bool = True,
+        include_thermal_diffusivity: bool = True,
+    ) -> Dict[str, np.ndarray]:
+        """
+        Compute Cantera transport properties from TPY.
+
+        Returns (based on flags):
+          heat_conductivity        (SEM-shaped) [W/m/K]
+          thermal_diffusivity      (SEM-shaped) [cm^2/s]
+        """
+        if not include_heat_conductivity and not include_thermal_diffusivity:
+            return {}
+
+        gas = ct.Solution(cantera_file)
+        mech_index = {name: i for i, name in enumerate(gas.species_names)}
+
+        T_nd = np.asarray(self.t)
+        T_nd_flat = T_nd.ravel(order="C")
+        n_points = int(T_nd_flat.size)
+
+        Y_full = np.zeros((n_points, gas.n_species), dtype=float)
+        for sp in species_list:
+            if sp not in mech_index:
+                raise KeyError(f"Species {sp!r} not found in Cantera mechanism.")
+            y_sp = np.asarray(self.get_scalar(sp)).ravel(order="C")
+            if y_sp.size != n_points:
+                raise ValueError(f"Mass fraction field {sp!r} has wrong size (got {y_sp.size}, expected {n_points}).")
+            Y_full[:, mech_index[sp]] = y_sp
+
+        out_flat = self._reaction_rates_core_flat(
+            cantera_file=cantera_file,
+            T_nd_flat=T_nd_flat,
+            Y_full_flat=Y_full,
+            t_ref=float(t_ref),
+            p_ref=float(p_ref),
+            compute_omega=False,
+            compute_heat_conductivity=bool(include_heat_conductivity),
+            compute_thermal_diffusivity=bool(include_thermal_diffusivity),
+        )
+
         out_sem: Dict[str, np.ndarray] = {}
         for k, v in out_flat.items():
             out_sem[k] = np.asarray(v).reshape(T_nd.shape, order="C")
@@ -582,6 +649,7 @@ class SEMDataset:
         compute_curv_grad: bool = False,
         compute_local_vel_jacobian: bool = False,
         compute_reaction_rates: bool = False,
+        compute_transport: Optional[bool] = None,
         dssum_derivatives: bool = True,
         # progress
         progress_fuel: str = "H2",
@@ -724,7 +792,10 @@ class SEMDataset:
                 point_data["du_tdz"] = self._dssum_field(dut_dz) if dssum_derivatives else dut_dz
 
         # Reaction rates
-        if compute_reaction_rates:
+        if compute_transport is None:
+            compute_transport = bool(compute_reaction_rates)
+
+        if compute_reaction_rates or compute_transport:
             if cantera_inputs is None or len(cantera_inputs) < 4:
                 raise ValueError("cantera_inputs must include [cantera_file, species_list, t_ref, p_ref]")
             cantera_file = str(cantera_inputs[0])
@@ -735,13 +806,23 @@ class SEMDataset:
             # Hardcoded
             species_list = ["H2", "O2", "H2O","H","O","OH","HO2","H2O2","N2"]  # Ddefault
 
-            rr = self.compute_reaction_rates(
-                cantera_file=cantera_file,
-                species_list=species_list,
-                t_ref=t_ref,
-                p_ref=p_ref,
-            )
-            point_data.update(rr)
+            if compute_reaction_rates:
+                rr = self.compute_reaction_rates(
+                    cantera_file=cantera_file,
+                    species_list=species_list,
+                    t_ref=t_ref,
+                    p_ref=p_ref,
+                    include_transport=bool(compute_transport),
+                )
+                point_data.update(rr)
+            elif compute_transport:
+                transport = self.compute_transport_properties(
+                    cantera_file=cantera_file,
+                    species_list=species_list,
+                    t_ref=t_ref,
+                    p_ref=p_ref,
+                )
+                point_data.update(transport)
 
         return point_data
 # ======================================================================================

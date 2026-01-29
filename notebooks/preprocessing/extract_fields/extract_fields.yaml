@@ -1,7 +1,7 @@
 # Single time step (used if MULTI_TIME_STEP is false)
 TIME_STEP: 1
 # Enable multi-time-step extraction
-MULTI_TIME_STEP: True
+MULTI_TIME_STEP: False
 # Start time step for multi extraction (inclusive)
 TIME_STEP_START: 249
 # End time step for multi extraction (inclusive)
@@ -38,11 +38,12 @@ HDF_FORMAT: "fixed"
 COMP_VEL_JACOBIAN:       false
 COMP_VEL_HESSIAN:        false
 COMP_REACTION_RATES:     false
-COMP_T_GRAD:             True
+COMP_TRANSPORT:          true  # (heat_conductivity, thermal_diffusivity)
+COMP_T_GRAD:             true
 COMP_CURV_GRAD:          false
 COMP_LOCAL_VEL_JACOBIAN: false
 # Apply dssum (continuity) to derivative fields
-COMP_DSSUM_DERIVS:       false
+COMP_DSSUM_DERIVS:       true
 
 # Scalars to extract
 SCALARS:
@@ -55,7 +56,7 @@ SCALARS:
   - "HO2"
   - "H2O2"
   - "N2"
-  #- "HRR"
+  # - "HRR"
   # - "curvature"
   # - "stretch_rate"
   # - "DW_FDS"

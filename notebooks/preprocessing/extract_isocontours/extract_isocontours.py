@@ -66,6 +66,9 @@ COMP_T_GRAD = bool(CFG["COMP_T_GRAD"])
 COMP_CURV_GRAD = bool(CFG["COMP_CURV_GRAD"])
 COMP_LOCAL_VEL_JACOBIAN = bool(CFG["COMP_LOCAL_VEL_JACOBIAN"])
 COMP_REACTION_RATES = bool(CFG["COMP_REACTION_RATES"])
+COMP_TRANSPORT = CFG.get("COMP_TRANSPORT", None)
+if COMP_TRANSPORT is not None:
+    COMP_TRANSPORT = bool(COMP_TRANSPORT)
 
 T_REF = float(CFG["T_REF"])
 P_REF = float(CFG["P_REF"])
@@ -128,6 +131,7 @@ def process_isocontours(
             compute_curv_grad=COMP_CURV_GRAD,
             compute_local_vel_jacobian=COMP_LOCAL_VEL_JACOBIAN,
             compute_reaction_rates=COMP_REACTION_RATES,
+            compute_transport=COMP_TRANSPORT,
         )
 
         # Attach arrays to cached grid for this timestep

@@ -31,6 +31,7 @@ POST: true
 COMP_VEL_JACOBIAN: true
 COMP_VEL_HESSIAN: false
 COMP_REACTION_RATES: true
+COMP_TRANSPORT: null  # optional: only transport (heat_conductivity, thermal_diffusivity)
 COMP_T_GRAD: true
 COMP_CURV_GRAD: true
 COMP_LOCAL_VEL_JACOBIAN: true

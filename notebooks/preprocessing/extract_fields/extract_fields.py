@@ -171,6 +171,9 @@ def main() -> None:
     compute_curv_grad = bool(cfg["COMP_CURV_GRAD"])
     compute_local_vel_jacobian = bool(cfg["COMP_LOCAL_VEL_JACOBIAN"])
     compute_reaction_rates = bool(cfg.get("COMP_REACTION_RATES", False))
+    compute_transport = cfg.get("COMP_TRANSPORT", None)
+    if compute_transport is not None:
+        compute_transport = bool(compute_transport)
     compute_dssum_derivs = bool(cfg.get("COMP_DSSUM_DERIVS", True))
 
     # Cantera inputs
@@ -227,6 +230,7 @@ def main() -> None:
             compute_curv_grad=compute_curv_grad,
             compute_local_vel_jacobian=compute_local_vel_jacobian,
             compute_reaction_rates=compute_reaction_rates,
+            compute_transport=compute_transport,
             dssum_derivatives=compute_dssum_derivs,
         )
 
