@@ -43,6 +43,10 @@ from pysemtools.interpolation.interpolator import (
     get_bbox_from_coordinates,
     get_bbox_centroids_and_max_dist,
 )
+import pysemtools, sys
+print("pysemtools file:", pysemtools.__file__)
+print("sys.path[0:5]:", sys.path[:5])
+
 
 def _find_project_root(start: Path) -> Path:
     """Find repo root by walking up until 'notebooks' directory exists."""
@@ -170,6 +174,7 @@ def main() -> None:
     compute_curv_grad = bool(cfg["COMP_CURV_GRAD"])
     compute_local_vel_jacobian = bool(cfg["COMP_LOCAL_VEL_JACOBIAN"])
     compute_reaction_rates = bool(cfg.get("COMP_REACTION_RATES", False))
+    compute_dssum_derivs = bool(cfg.get("COMP_DSSUM_DERIVS", True))
 
     # Cantera inputs
     T_REF = float(cfg["T_REF"])
@@ -225,6 +230,7 @@ def main() -> None:
             compute_curv_grad=compute_curv_grad,
             compute_local_vel_jacobian=compute_local_vel_jacobian,
             compute_reaction_rates=compute_reaction_rates,
+            dssum_derivatives=compute_dssum_derivs,
         )
 
         elem_idx = None

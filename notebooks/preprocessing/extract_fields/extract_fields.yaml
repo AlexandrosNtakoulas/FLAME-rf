@@ -41,6 +41,8 @@ COMP_REACTION_RATES:     false
 COMP_T_GRAD:             True
 COMP_CURV_GRAD:          false
 COMP_LOCAL_VEL_JACOBIAN: false
+# Apply dssum (continuity) to derivative fields
+COMP_DSSUM_DERIVS:       false
 
 # Scalars to extract
 SCALARS:

@@ -104,6 +104,8 @@ pip3 install pympler
 pip3 install memory_profiler
 pip3 install pydmd
 pip3 install tables
+pip3 install tdqm
+pip3 install h5py
 
 git clone https://github.com/ExtremeFLOW/pySEMTools.git
 cd pySEMTools/
