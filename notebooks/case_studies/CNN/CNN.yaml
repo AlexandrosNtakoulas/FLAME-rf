@@ -41,7 +41,7 @@ HISTORY: 7
 TRAIN_FRACTION: 0.8
 
 # Training hyperparameters
-EPOCHS: 200
+EPOCHS: 10
 BATCH_SIZE: 4
 LR: 5.0e-4
 WEIGHT_DECAY: 1.0e-6
@@ -55,8 +55,8 @@ HIDDEN_CHANNELS:
 KERNEL_SIZE: 3
 PREDICT_DELTA: true
 
-HISTORY_CANDIDATES: [5] 
-HISTORY_STUDY_EPOCHS: 100
+HISTORY_CANDIDATES: [2,4,6,8,10] 
+HISTORY_STUDY_EPOCHS: 10
 PRED_WINDOW: 5
 
 # Logging
@@ -69,6 +69,12 @@ PLOT_SLICE_INDEX: null
 # Isotherm/isocontour comparison
 ISO_VALUE: 3.8
 
+# Optional zoom window (null disables)
+XLIM:
+  - 320
+  - 380
+YLIM: null
+
 # Prediction window analysis (optional)
 PRED_WINDOW: 10
 PRED_START_INDEX: null
@@ -78,11 +84,12 @@ PRED_OUT_DIR: "data/fields/cnn_predictions"
 
 # Plot styling (optional)
 PLOT_FONT_FAMILY: "CMU Serif"
-PLOT_FONT_SIZE: 20
+PLOT_FONT_SIZE: 25
 FIG_DPI: 250
 FIG_SIZE:
   - 6.8
   - 6.2
+FIELD_COLORMAP: "viridis"
 COLOR_DATA: "#77b5b6"
 COLOR_DATA_EDGE: "#378d94"
 COLOR_PRED: "#9671bd"

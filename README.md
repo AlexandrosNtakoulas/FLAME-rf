@@ -166,7 +166,7 @@ data/fields/
 ### 4) Run analysis notebooks
 All analysis notebooks read their parameters from the YAML files in their folder under `notebooks/case_studies/`.
 For example:
-- `notebooks/case_studies/Sd_decomposition_analysis/Sd_decomposition_analysis.ipynb` uses `notebooks/case_studies/Sd_decomposition_analysis/Sd_decomposition_analysis.yaml`
+- `notebooks/case_studies/FDS_decomposition_analysis/FDS_decomposition_analysis.ipynb` uses `notebooks/case_studies/FDS_decomposition_analysis/FDS_decomposition_analysis.yaml`
 - `notebooks/case_studies/Feature_importance_SHAP_curvature_bins/Feature_importance_SHAP_curvature_bins.ipynb` uses `notebooks/case_studies/Feature_importance_SHAP_curvature_bins/Feature_importance_SHAP_curvature_bins.yaml`
 
 Tip: launch Jupyter from the repo root so relative paths resolve correctly.
