@@ -45,9 +45,9 @@ The goal of this work is to establish a reproducible computational pipeline that
 │   │   │   │   └── ...
 │   │   │   └── ...
 │   │   └── ...
-│   ├── isocontours/               # Extracted flame-front CSVs
+│   ├── isocontours/               # Extracted flame-front files (HDF5)
 │   │   └── ...
-│   └── fields/                    # Extracted field CSVs
+│   └── fields/                    # Extracted field files (HDF5, .f*)
 │       └── ...
 │
 ├── notebooks/
@@ -85,6 +85,9 @@ The goal of this work is to establish a reproducible computational pipeline that
 ```bash
 git clone --recurse-submodules https://github.com/AlexandrosNtakoulas/Bachelor_Thesis.git
 cd Bachelor_Thesis
+
+# If you cloned earlier without --recurse-submodules:
+git submodule update --init --recursive
 
 python3 -m venv .venv
 source .venv/bin/activate
