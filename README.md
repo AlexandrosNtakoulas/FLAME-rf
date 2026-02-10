@@ -53,10 +53,10 @@ The goal of this work is to establish a reproducible computational pipeline that
 ├── notebooks/
 │   ├── preprocessing/
 │   │   ├── extract_isocontours/
-│   │   │   ├── extract_isocontours.ipynb
+│   │   │   ├── extract_isocontours.py
 │   │   │   └── extract_isocontours.yaml
 │   │   └── extract_fields/
-│   │       ├── extract_fields.ipynb
+│   │       ├── extract_fields.py
 │   │       └── extract_fields.yaml
 │   ├── case_studies/
 │   │   ├── Model_verification/
@@ -71,7 +71,7 @@ The goal of this work is to establish a reproducible computational pipeline that
 │   ├── io_fields.py
 │   └── io_fronts.py
 │
-├── pySEMTools/                    # Local pySEMTools clone (core SEM functionality)
+├── pySEMTools/                    # Git submodule (core SEM functionality)
 │   └── ...
 │
 ├── report_figures/                # Generated figures (not tracked by git)
@@ -83,13 +83,22 @@ The goal of this work is to establish a reproducible computational pipeline that
 ## Installation (venv)
 
 ```bash
-git clone https://github.com/AlexandrosNtakoulas/Bachelor_Thesis.git
+git clone --recurse-submodules https://github.com/AlexandrosNtakoulas/Bachelor_Thesis.git
 cd Bachelor_Thesis
 
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 
+# Option 1: install from requirements file
+pip install -r requirements.txt
+```
+
+`requirements.txt` installs the Python dependencies and also installs the local `pySEMTools` submodule (`-e ./pySEMTools`).
+
+Alternative manual install:
+
+```bash
 pip3 install ipython jupyter
 pip3 install cantera
 pip3 install pandas matplotlib scikit-learn
@@ -104,17 +113,60 @@ pip3 install pympler
 pip3 install memory_profiler
 pip3 install pydmd
 pip3 install tables
-pip3 install tdqm
+pip3 install tqdm
 pip3 install h5py
-
-git clone https://github.com/ExtremeFLOW/pySEMTools.git
-cd pySEMTools/
-pip3 install .
+pip3 install -e ./pySEMTools
 ```
 
-Alternative (use the requirements file):
+## Installation on Euler HPC Cluster
+
 ```bash
-pip3 install -r requirements.txt
+git clone --recurse-submodules https://github.com/AlexandrosNtakoulas/Bachelor_Thesis.git
+cd ~/Bachelor_Thesis
+
+python -m pip install --user --upgrade virtualenv
+python -m virtualenv $HOME/Bachelor_Thesis/.venv
+source .venv/bin/activate
+
+python -m ipykernel install --user --name flamekit-venv --display-name "Python (flamekit venv)"
+
+# Continue with pip3 installation commands from this README
+# For mpi4py specifically:
+module load openmpi
+pip install --force-reinstall mpi4py
+
+# Link data folder from scratch to repo in home
+ln -s /cluster/scratch/antakoulas/Bachelor_Thesis/data ~/Bachelor_Thesis/data
+```
+
+Tip for convenience on HPC setup:
+In your `~/.bashrc` file:
+
+```bash
+alias FLAME='source "$HOME/Bachelor_Thesis/.venv/bin/activate" && export PYTHONPATH="$PWD:${PYTHONPATH}"'
+```
+
+Then to run a notebook:
+
+```bash
+salloc --ntasks=32 --cpus-per-task=1 --mem-per-cpu=20G --time=01:30:00
+srun -n 8 python notebooks/preprocessing/extract_fields/extract_fields.py
+```
+
+## Updating `pySEMTools` submodule
+Use this when you pull new changes from this repository and want the pinned submodule commit:
+
+```bash
+git pull
+git submodule update --init --recursive
+```
+
+Use this when you want to bump `pySEMTools` to its latest upstream commit and record that update in this repository:
+
+```bash
+git submodule update --remote --recursive pySEMTools
+git add pySEMTools
+git commit -m "Update pySEMTools submodule"
 ```
 
 YOU NEED TO ALSO INSTALL LATEX and the specific font type
@@ -137,9 +189,10 @@ Notes:
   - `POST: false` -> `premix0.fXXXXX`
 - Always include the first time step file (`...f00001`) in the same folder.
 
-### 2) Extract flame fronts (HDF5)
+### 2) Extract flame fronts (HDF5 files)
 1. Edit `notebooks/preprocessing/extract_isocontours/extract_isocontours.yaml` with your case settings.
-2. Run `notebooks/preprocessing/extract_isocontours/extract_isocontours.ipynb`.
+2. Run `notebooks/preprocessing/extract_isocontours/extract_isocontours.py`.
+To run using MPI: PYTHONPATH=. mpirun -n 8 python notebooks/preprocessing/extract_isocontours/extract_isocontours.py
 
 Output example:
 ```text
@@ -150,9 +203,11 @@ data/isocontours/
         └── ...
 ```
 
-### 3) Extract fields (HDF5)
+### 3) Extract fields (HDF5 & .f* files)
 1. Edit `notebooks/preprocessing/extract_fields/extract_fields.yaml`.
-2. Run `notebooks/preprocessing/extract_fields/extract_fields.ipynb`.
+2. Run `notebooks/preprocessing/extract_fields/extract_fields.py`. 
+To run using MPI: PYTHONPATH=. mpirun -n 8 python notebooks/preprocessing/extract_fields/extract_fields.py
+
 
 Output example:
 ```text
@@ -167,8 +222,4 @@ data/fields/
 All analysis notebooks read their parameters from the YAML files in their folder under `notebooks/case_studies/`.
 For example:
 - `notebooks/case_studies/FDS_decomposition_analysis/FDS_decomposition_analysis.ipynb` uses `notebooks/case_studies/FDS_decomposition_analysis/FDS_decomposition_analysis.yaml`
-- `notebooks/case_studies/Feature_importance_SHAP_curvature_bins/Feature_importance_SHAP_curvature_bins.ipynb` uses `notebooks/case_studies/Feature_importance_SHAP_curvature_bins/Feature_importance_SHAP_curvature_bins.yaml`
-
-Tip: launch Jupyter from the repo root so relative paths resolve correctly.
-
-To run using MPI: PYTHONPATH=. mpirun -n 8 python notebooks/preprocessing/extract_fields/extract_fields.py
+- `notebooks/case_studies/Feature_selection/Feature_selection.ipynb` uses `notebooks/case_studies/Feature_selection/Feature_selection.yaml`

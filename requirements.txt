@@ -1,0 +1,40 @@
+# CPU PyTorch wheels
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Core scientific stack
+numpy
+scipy
+pandas
+h5py
+tables
+PyYAML
+mpi4py
+
+# Interactive / notebooks
+ipython
+jupyter
+
+# Plotting and visualization
+matplotlib
+seaborn
+vtk
+pyvista
+pyvtk
+trame
+trame-vtk
+trame-vuetify
+
+# Machine learning
+scikit-learn
+pydmd
+torch
+torchvision
+
+# Utilities
+cantera
+pympler
+memory_profiler
+tqdm
+
+# Install pySEMTools from the local git submodule
+-e ./pySEMTools
