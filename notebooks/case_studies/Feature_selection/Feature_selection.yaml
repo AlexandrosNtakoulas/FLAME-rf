@@ -104,6 +104,11 @@ FIG_DPI: 250
 FIG_SIZE:
   - 8.3
   - 6.2
+# Optional: override dendrogram figure size (width, height).
+# If omitted, defaults to (FIG_SIZE[0] * 1.5, FIG_SIZE[1]).
+DENDRO_FIG_SIZE:
+  - 12.45
+  - 6.2
 COLOR_DATA: "#77b5b6"
 COLOR_DATA_EDGE: "#378d94"
 COLOR_PRED: "#9671bd"
