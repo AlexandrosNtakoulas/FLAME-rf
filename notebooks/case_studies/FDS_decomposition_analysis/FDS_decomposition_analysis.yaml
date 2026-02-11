@@ -39,7 +39,11 @@ SD_MAX: 5
 FIG_DPI: 250
 SCATTER_S: 10
 ALPHA: 0.55
+# Marker outline width for scatter plots
+LINEWIDTHS: 0.05
 RASTERIZE: true
+# Colormap for scalar-colored scatter plots
+COLORMAP: "brg"
 
 # Color cross-plots by DW_FDS
 COLOR_CROSS_BY_TARGET: true
@@ -59,6 +63,19 @@ FIG_DPI: 250
 FIG_SIZE:
   - 6.8
   - 6.2
+# Fixed layout margins for scatter plots
+PLOT_MARGIN_LEFT: 0.22
+PLOT_MARGIN_RIGHT: 0.87
+PLOT_MARGIN_BOTTOM: 0.14
+PLOT_MARGIN_TOP: 0.97
+PLOT_WSPACE: 0.05
+# Scatter colorbar layout (model verification style)
+SCATTER_CBAR_FRACTION: 0.046
+SCATTER_CBAR_PAD: 0.03
+# Tight export padding (inches) for saved figures
+SAVE_PAD_INCHES: 0.02
+# Use tight bounding box when exporting figures
+SAVE_TIGHT_BBOX: false
 COLOR_DATA: "#77b5b6"
 COLOR_DATA_EDGE: "#378d94"
 COLOR_PRED: "#9671bd"
