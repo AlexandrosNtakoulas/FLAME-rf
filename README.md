@@ -85,7 +85,6 @@ The goal of this work is to establish a reproducible computational pipeline that
 ```bash
 git clone --recurse-submodules https://github.com/AlexandrosNtakoulas/Bachelor_Thesis.git
 cd Bachelor_Thesis
-
 # If you cloned earlier without --recurse-submodules:
 git submodule update --init --recursive
 
@@ -97,34 +96,34 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-`requirements.txt` installs the Python dependencies and also installs the local `pySEMTools` submodule (`-e ./pySEMTools`).
+`requirements.txt` installs the Python dependencies and the FLAME-rf package.
 
 Alternative manual install:
 
 ```bash
-pip3 install ipykernel
-pip3 install cantera
-pip3 install pandas
-pip3 install matplotlib
-pip3 install scikit-learn
-pip3 install mpi4py
-pip3 install torch 
-pip3 install pyvista
-pip3 install pymech
-pip3 install tdqm
-pip3 install pympler
-pip3 install memory_profiler
-pip3 install tables
-pip3 install h5py
-pip3 install pydmd
-pip3 install -e ./pySEMTools
-pip3 install -e .
+pip install ipykernel
+pip install cantera
+pip install pandas
+pip install matplotlib
+pip install scikit-learn
+pip install mpi4py
+pip install torch 
+pip install pyvista
+pip install pymech
+pip install tdqm
+pip install pympler
+pip install memory_profiler
+pip install tables
+pip install h5py
+pip install pydmd
+pip install -e ./pySEMTools
+pip install -e .
 ```
 
 ## Installation on Euler HPC Cluster
 
 ```bash
-git clone --recurse-submodules https://github.com/AlexandrosNtakoulas/Bachelor_Thesis.git
+git clone --recurse-submodules https://github.com/AlexandrosNtakoulas/FLAME-rf.git
 cd ~/Bachelor_Thesis
 
 python -m pip install --user --upgrade virtualenv
@@ -133,20 +132,20 @@ source .venv/bin/activate
 
 python -m ipykernel install --user --name FLAME-venv --display-name "FLAME"
 
-# Continue with pip3 installation commands from this README
+# Continue with pip installation commands from this README
 # For mpi4py specifically:
 module load openmpi
 pip install --force-reinstall mpi4py
 
 # Link data folder from scratch to repo in home
-ln -s /cluster/scratch/antakoulas/Bachelor_Thesis/data ~/Bachelor_Thesis/data
+ln -s /cluster/scratch/<username>/FLAME-rf/data /cluster/home/<username>/FLAME-rf/data
 ```
 
-Tip for convenience on HPC setup:
+For convenience on HPC setup:
 In your `~/.bashrc` file:
 
 ```bash
-alias FLAME='source "$HOME/Bachelor_Thesis/.venv/bin/activate" && export PYTHONPATH="$PWD:${PYTHONPATH}"'
+alias FLAME='source "$HOME/FLAME-rf/.venv/bin/activate"'
 ```
 
 Then to run a notebook:

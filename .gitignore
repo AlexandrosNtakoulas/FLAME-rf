@@ -1,5 +1,10 @@
-.venv/
+.venv*/
 .idea/
 report_figures/
 data/
+*.egg-info/
+__pycache__/
+.pytest_cache/
+dist/
+build/
 
