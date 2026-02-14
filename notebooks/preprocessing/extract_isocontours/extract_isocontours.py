@@ -49,7 +49,7 @@ POST = bool(CFG["POST"])
 FILE_NAME = "po_postPremix" if POST else "premix"
 
 PHI = float(CFG["PHI"])
-LAT_SIZE = int(CFG["LAT_SIZE"])
+LAT_SIZE = str(CFG["LAT_SIZE"])
 
 TIME_STEP = int(CFG["TIME_STEP"])
 MULTI_TIME_STEP = bool(CFG["MULTI_TIME_STEP"])

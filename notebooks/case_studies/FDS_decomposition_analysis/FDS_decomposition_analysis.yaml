@@ -43,7 +43,7 @@ ALPHA: 0.55
 LINEWIDTHS: 0.05
 RASTERIZE: true
 # Colormap for scalar-colored scatter plots
-COLORMAP: "brg"
+COLORMAP: "viridis"
 
 # Color cross-plots by DW_FDS
 COLOR_CROSS_BY_TARGET: true

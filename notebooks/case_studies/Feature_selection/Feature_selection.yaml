@@ -109,6 +109,8 @@ FIG_SIZE:
 DENDRO_FIG_SIZE:
   - 12.45
   - 6.2
+# Slightly thicker dendrogram branch lines
+DENDRO_LINE_WIDTH: 2.0
 COLOR_DATA: "#77b5b6"
 COLOR_DATA_EDGE: "#378d94"
 COLOR_PRED: "#9671bd"

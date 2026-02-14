@@ -18,7 +18,7 @@ will also be performed for lean hydrogen-
 air premixed flames to enrich the
 existing datasets.
 
-This repository contains the codebase developed as part of my Bachelor Thesis at **ETH Zürich (D-MAVT)**, conducted in the **Computational and Applied Physics / Combustion Laboratory (CAPS)**.  
+This repository contains the codebase developed as part of my Bachelor Thesis at **ETH Zürich (D-MAVT)**, conducted in the **Combustion, Acoustics and flow Physics (CAPS)**.  
 The project focuses on **data-driven modeling of hydrogen combustion** using **Direct Numerical Simulation (DNS)** data obtained from the **Nek5000** spectral-element solver.
 
 ---
@@ -102,23 +102,23 @@ pip install -r requirements.txt
 Alternative manual install:
 
 ```bash
-pip3 install ipython jupyter
+pip3 install ipykernel
 pip3 install cantera
-pip3 install pandas matplotlib scikit-learn
-pip3 install seaborn
+pip3 install pandas
+pip3 install matplotlib
+pip3 install scikit-learn
 pip3 install mpi4py
-pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-pip3 install vtk
+pip3 install torch 
 pip3 install pyvista
-pip3 install pyvtk
-pip3 install trame trame-vtk trame-vuetify
+pip3 install pymech
+pip3 install tdqm
 pip3 install pympler
 pip3 install memory_profiler
-pip3 install pydmd
 pip3 install tables
-pip3 install tqdm
 pip3 install h5py
+pip3 install pydmd
 pip3 install -e ./pySEMTools
+pip3 install -e .
 ```
 
 ## Installation on Euler HPC Cluster
@@ -131,7 +131,7 @@ python -m pip install --user --upgrade virtualenv
 python -m virtualenv $HOME/Bachelor_Thesis/.venv
 source .venv/bin/activate
 
-python -m ipykernel install --user --name flamekit-venv --display-name "Python (flamekit venv)"
+python -m ipykernel install --user --name FLAME-venv --display-name "FLAME"
 
 # Continue with pip3 installation commands from this README
 # For mpi4py specifically:
