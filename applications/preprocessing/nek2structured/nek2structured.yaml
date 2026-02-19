@@ -1,0 +1,80 @@
+# Time step control
+MULTI_TIME_STEP: True
+TIME_STEP: 270
+TIME_STEP_START: 290
+TIME_STEP_END: 300
+
+# Case parameters
+PHI: 0.40
+LAT_SIZE: "025"
+POST: False
+
+# Nek input base directory (relative to project root)
+DATA_BASE_DIR: "data/nek"
+
+# Output base directory (relative to project root)
+OUTPUT_BASE_DIR: "data/fields/structured_grids"
+
+# Optional override for Nek file prefix (null uses POST flag)
+FILE_PREFIX: null
+# Padding for Nek time-step indices (e.g., f00001 -> 5)
+FILE_INDEX_PAD: 5
+GEOM_TIME_STEP: 1
+
+# 2D mesh handling
+EXTRUDE_2D: True
+EXTRUDE_LZ: null
+
+
+# Structured grid bounds
+X_BBOX: [320.0, 380.0]
+Y_BBOX: [0.0, 25.0]
+Z_BBOX: [0.0, 0.0]
+NX: 800
+NY: 200
+NZ: 1
+GRID_MODE: "equal"
+GRID_GAIN: 1.0
+
+# Fields to interpolate ("all" or list of field names)
+FIELDS_TO_INTERPOLATE:
+  - "t"
+
+# Progress variable output (computed from temperature field)
+ADD_PROGRESS_VAR: true
+TEMP_FIELD_NAME: "t"
+PROGRESS_FIELD_NAME: "progress_var"
+# Optional manual nondimensional bounds (if both set, Cantera is skipped)
+PROGRESS_T_COLD_ND: null
+PROGRESS_T_HOT_ND: null
+# Cantera-based bounds (used when manual bounds are null)
+T_REF: 300.0
+P_REF: 1.0e05
+CANTERA_YAML: "FLAME/chemical_mech/BurkeH2.yaml"
+PROGRESS_FUEL: "H2"
+PROGRESS_OXIDIZER: "O2:0.21, N2:0.79"
+PROGRESS_LOGLEVEL: 0
+
+# Interpolation settings
+POINT_INTERPOLATOR_TYPE: "multiple_point_legendre_numpy"
+MAX_PTS: 256
+FIND_POINTS_ITERATIVE: [False, 5000]
+FIND_POINTS_COMM_PATTERN: "point_to_point"
+ELEM_PERCENT_EXPANSION: 0.01
+GLOBAL_TREE_TYPE: "rank_bbox"
+GLOBAL_TREE_NBINS: 1024
+FIND_POINTS_TOL: 1.0e-12
+FIND_POINTS_MAX_ITER: 50
+USE_AUTOGRAD: False
+LOCAL_DATA_STRUCTURE: "kdtree"
+USE_ORIENTED_BBOX: False
+
+# Output file naming
+OUTPUT_FILE_STEM: "structured_fields"
+POINTS_FNAME: "points.hdf5"
+WRITE_COORDS: True
+
+# Plot settings (optional)
+PLOT_FILE_INDEX: 1
+PLOT_FIELD: ""
+PLOT_SLICE_INDEX: null

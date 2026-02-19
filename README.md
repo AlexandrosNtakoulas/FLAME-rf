@@ -1,13 +1,13 @@
 
-### FLAME-rf
+### **FLAME-rf**
 FLAME-rf is a post-processing and data analysis tool for direct numerical simulation datasets
 generated with the Nek5000 solver. The developed package allows researchers to integrate machine
 learning and model reduction methodologies into their workflow, generating potential for new sci-
 entific discoveries
 
 This repository contains the codebase developed as part of my Bachelor Thesis at **ETH Zürich (D-MAVT)**, conducted in the **Combustion, Acoustics and Flow Physics (CAPS)** laboratory.
----
 
+---
 ## 📘 Overview:
 
 The goal of this work is to establish a reproducible computational pipeline that:
@@ -32,7 +32,7 @@ The goal of this work is to establish a reproducible computational pipeline that
 │   ├── Markstein lengths/         # Markstein-analysis tabular outputs
 │   └── Reference quantities/      # Reference quantities 
 │
-├── notebooks/
+├── applications/
 │   ├── preprocessing/
 │   │   ├── nek2structured/
 │   │   │   ├── nek2structured.py
@@ -143,7 +143,7 @@ alias FLAME='source "$HOME/FLAME-rf/.venv/bin/activate"'
 Then to run a file:
 ```bash
 salloc --ntasks=32 --cpus-per-task=1 --mem-per-cpu=20G --time=01:30:00
-srun -n 8 python notebooks/preprocessing/extract_fields/extract_fields.py
+srun -n 8 python applications/preprocessing/extract_fields/extract_fields.py
 ```
 
 ## Updating: `pySEMTools` submodule
@@ -196,9 +196,9 @@ Notes:
 - Always include the first time step file (`...f00001`) in the same folder.
 
 ### 2) Extract flame fronts (HDF5 files)
-1. Edit `notebooks/preprocessing/extract_isocontours/extract_isocontours.yaml` with your case settings.
-2. Run `notebooks/preprocessing/extract_isocontours/extract_isocontours.py`.
-To run using MPI: mpirun -n 8 python notebooks/preprocessing/extract_isocontours/extract_isocontours.py
+1. Edit `applications/preprocessing/extract_isocontours/extract_isocontours.yaml` with your case settings.
+2. Run `applications/preprocessing/extract_isocontours/extract_isocontours.py`.
+To run using MPI: mpirun -n 8 python applications/preprocessing/extract_isocontours/extract_isocontours.py
 
 Output example:
 ```text
@@ -210,9 +210,9 @@ data/isocontours/
 ```
 
 ### 3) Extract fields (HDF5 & .f* files)
-1. Edit `notebooks/preprocessing/extract_fields/extract_fields.yaml`.
-2. Run `notebooks/preprocessing/extract_fields/extract_fields.py`. 
-To run using MPI: mpirun -n 8 python notebooks/preprocessing/extract_fields/extract_fields.py
+1. Edit `applications/preprocessing/extract_fields/extract_fields.yaml`.
+2. Run `applications/preprocessing/extract_fields/extract_fields.py`. 
+To run using MPI: mpirun -n 8 python applications/preprocessing/extract_fields/extract_fields.py
 
 
 Output example:
@@ -225,7 +225,7 @@ data/fields/
 ```
 
 ### 4) Run analysis notebooks
-All analysis notebooks read their parameters from the YAML files in their folder under `notebooks/case_studies/`.
+All analysis notebooks read their parameters from the YAML files in their folder under `applications/case_studies/`.
 For example:
-- `notebooks/case_studies/FDS_decomposition_analysis/FDS_decomposition_analysis.ipynb` uses `notebooks/case_studies/FDS_decomposition_analysis/FDS_decomposition_analysis.yaml`
-- `notebooks/case_studies/Feature_selection/Feature_selection.ipynb` uses `notebooks/case_studies/Feature_selection/Feature_selection.yaml`
+- `applications/case_studies/FDS_decomposition_analysis/FDS_decomposition_analysis.ipynb` uses `applications/case_studies/FDS_decomposition_analysis/FDS_decomposition_analysis.yaml`
+- `applications/case_studies/Feature_selection/Feature_selection.ipynb` uses `applications/case_studies/Feature_selection/Feature_selection.yaml`

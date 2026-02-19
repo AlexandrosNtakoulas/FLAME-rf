@@ -1,0 +1,83 @@
+# Input data base directory (relative to project root)
+DATA_BASE_DIR: "data/nek"
+# Output base directory for isocontours (relative to project root)
+ISOCONTOUR_BASE_DIR: "data/isocontours"
+
+# Single time step (used if MULTI_TIME_STEP is false)
+TIME_STEP: 200
+
+# Enable multi-time-step extraction
+MULTI_TIME_STEP: True
+# Start time step for multi extraction (inclusive)
+TIME_STEP_START: 150
+# End time step for multi extraction (inclusive)
+TIME_STEP_END: 305
+
+# Case parameters
+PHI: 0.40
+# Lateral domain size string (e.g., "025", "100")
+LAT_SIZE: "025"
+# Reference temperature
+T_REF: 300
+# Reference pressure
+P_REF: 1.0e05
+
+# Use post-processed data
+# When POST is true, input files are named "po_postPremix0.fxxxxx".
+# When POST is false, input files are named "premix0.fxxxxx".
+POST: false
+
+# Compute flags
+COMP_VEL_JACOBIAN: false
+COMP_VEL_HESSIAN: false
+COMP_REACTION_RATES: false
+COMP_TRANSPORT: false  # (heat_conductivity, thermal_diffusivity)
+COMP_T_GRAD: false
+COMP_CURV_GRAD: false
+COMP_LOCAL_VEL_JACOBIAN: false
+# Apply dssum (continuity) to derivative fields
+COMP_DSSUM_DERIVS: true
+
+# Cantera mechanism YAML (relative to project root)
+CANTERA_YAML: "FLAME/chemical_mech/BurkeH2.yaml"
+
+# Progress variable isolevels (0-1)
+PROGRESS_LEVELS: 
+  - 0.6
+
+
+
+# Scalars to include in the dataset
+SCALARS:
+  - "H2"
+  - "O2"
+  - "H2O"
+  - "H"
+  - "O"
+  - "OH"
+  - "HO2"
+  - "H2O2"
+  - "N2"
+  # - "HRR"
+  # - "curvature"
+  # - "stretch_rate"
+  # - "DW_FDS"
+  # - "abs_flame_prop_vel_normal"
+  # - "u_n"
+  # - "u_t"
+  # - "strain_rate"
+  # - "tangential_strain_rate"
+  # - "normal_strain_rate"
+  # - "density_ratio_sigma"
+  # - "gradT"
+  # - "gradT_normal"
+  # - "total_heat_conduction"
+  # - "heat_conduction_normal"
+  # - "heat_conduction_tangential"
+  # - "FDS_source_term"
+  # - "FDS_conduction_term"
+  # - "FDS_diffusion_term"
+  # - "H2_diffusion_total"
+  # - "O2_diffusion_total"
+  # - "H_diffusion_total"
+  # - "vorticity"
