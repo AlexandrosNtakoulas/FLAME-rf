@@ -56,13 +56,7 @@ SAVE_FIGS: true
 # Output base directory for figures (relative to project root)
 OUT_BASE_DIR: "report_figures/case_studies/FDS_decomposition_analysis"
 
-# Plot styling (optional)
-PLOT_FONT_FAMILY: "CMU Serif"
-PLOT_FONT_SIZE: 25
-FIG_DPI: 250
-FIG_SIZE:
-  - 6.8
-  - 6.2
+# Plot styling overrides (global defaults in notebooks/case_studies/plot_style.yaml)
 # Fixed layout margins for scatter plots
 PLOT_MARGIN_LEFT: 0.22
 PLOT_MARGIN_RIGHT: 0.87
@@ -76,16 +70,3 @@ SCATTER_CBAR_PAD: 0.03
 SAVE_PAD_INCHES: 0.02
 # Use tight bounding box when exporting figures
 SAVE_TIGHT_BBOX: false
-COLOR_DATA: "#77b5b6"
-COLOR_DATA_EDGE: "#378d94"
-COLOR_PRED: "#9671bd"
-COLOR_PRED_EDGE: "#6a408d"
-COLOR_NEUTRAL: "#7e7e7e"
-COLOR_LINE: "#8a8a8a"
-PLOT_USE_TEX: True
-
-# Optional:
-PLOT_TEX_PREAMBLE:
-  - "\\usepackage{amsmath}"
-  - "\\usepackage{amssymb}"
-  - "\\usepackage{bm}"

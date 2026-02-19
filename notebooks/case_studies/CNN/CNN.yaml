@@ -66,8 +66,10 @@ SEED: 0
 # Plotting
 PLOT_SLICE_INDEX: null
 
-# Isotherm/isocontour comparison
-ISO_VALUE: 3.8
+# Isocontour comparison (progress variable)
+ISO_PROGRESS_FIELD_NAME: "progress_var"
+ISO_PROGRESS_VALUE: 0.6
+ISO_X_PAD_FRAC: 0.03
 
 # Optional zoom window (null disables)
 XLIM:
@@ -82,23 +84,4 @@ PRED_START_INDEX: null
 # Output directory for prediction (relative to project root)
 PRED_OUT_DIR: "data/fields/cnn_predictions"
 
-# Plot styling (optional)
-PLOT_FONT_FAMILY: "CMU Serif"
-PLOT_FONT_SIZE: 25
-FIG_DPI: 250
-FIG_SIZE:
-  - 6.8
-  - 6.2
-COLOR_DATA: "#77b5b6"
-COLOR_DATA_EDGE: "#378d94"
-COLOR_PRED: "#9671bd"
-COLOR_PRED_EDGE: "#6a408d"
-COLOR_NEUTRAL: "#7e7e7e"
-COLOR_LINE: "#8a8a8a"
-PLOT_USE_TEX: True
-
-# Optional:
-PLOT_TEX_PREAMBLE:
-  - "\\usepackage{amsmath}"
-  - "\\usepackage{amssymb}"
-  - "\\usepackage{bm}"
+# Plot styling overrides (global defaults in notebooks/case_studies/plot_style.yaml)

@@ -9,10 +9,10 @@ POST: true
 
 # Time steps to include
 TIME_STEPS:
-  - 198
-  - 199
+  # - 198
+  # - 199
   - 200
-  - 201
+  # - 201
 
 
 
@@ -94,13 +94,8 @@ SFS_CV_SPLITS: 5
 
 # Output base directory for figures (relative to project root)
 OUTPUT_BASE_DIR: "report_figures/case_studies/Feature_selection"
-# Figure DPI
-FIG_DPI: 300
 
-# Plot styling (optional)
-PLOT_FONT_FAMILY: "CMU Serif"
-PLOT_FONT_SIZE: 25
-FIG_DPI: 250
+# Plot styling overrides (global defaults in notebooks/case_studies/plot_style.yaml)
 FIG_SIZE:
   - 8.3
   - 6.2
@@ -111,16 +106,3 @@ DENDRO_FIG_SIZE:
   - 6.2
 # Slightly thicker dendrogram branch lines
 DENDRO_LINE_WIDTH: 2.0
-COLOR_DATA: "#77b5b6"
-COLOR_DATA_EDGE: "#378d94"
-COLOR_PRED: "#9671bd"
-COLOR_PRED_EDGE: "#6a408d"
-COLOR_NEUTRAL: "#7e7e7e"
-COLOR_LINE: "#8a8a8a"
-PLOT_USE_TEX: True
-
-# Optional:
-PLOT_TEX_PREAMBLE:
-  - "\\usepackage{amsmath}"
-  - "\\usepackage{amssymb}"
-  - "\\usepackage{bm}"

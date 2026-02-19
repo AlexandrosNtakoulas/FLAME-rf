@@ -44,6 +44,9 @@ FREQ_TOL: 1.0e-12
 # Plot controls
 N_MODES_TO_PLOT: 10
 NORMALIZE_MODE_FOR_PLOT: true
+ISO_PROGRESS_VAR_NAME: "progress_var"
+ISO_PROGRESS_VALUE: 0.6
+ISO_X_PAD_FRAC: 0.03
 CONTOUR_LEVELS_FILLED: 120
 CONTOUR_LEVELS_LINES: 120
 MODE_CONTOUR_LEVELS_FILLED: 120
@@ -56,26 +59,7 @@ XLIM:
   - 380
 YLIM: null
 
-# Plot styling (optional)
-PLOT_FONT_FAMILY: "CMU Serif"
-PLOT_FONT_SIZE: 25
-FIG_DPI: 250
-FIG_SIZE:
-  - 6.8
-  - 6.2
-COLOR_DATA: "#77b5b6"
-COLOR_DATA_EDGE: "#378d94"
-COLOR_PRED: "#9671bd"
-COLOR_PRED_EDGE: "#6a408d"
-COLOR_NEUTRAL: "#7e7e7e"
-COLOR_LINE: "#8a8a8a"
+# Plot styling overrides (global defaults in notebooks/case_studies/plot_style.yaml)
 COLORMAP: "viridis"
 HISTORY_SWEEP_CMAP_MIN: 0.08
 HISTORY_SWEEP_CMAP_MAX: 0.82
-PLOT_USE_TEX: True
-
-# Optional:
-PLOT_TEX_PREAMBLE:
-  - "\\usepackage{amsmath}"
-  - "\\usepackage{amssymb}"
-  - "\\usepackage{bm}"
